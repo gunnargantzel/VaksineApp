@@ -6,7 +6,14 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'fluent-ui': ['@fluentui/react-components', '@fluentui/react-icons']
+        }
+      }
+    }
   },
   server: {
     port: 3000,
@@ -14,5 +21,8 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['@fluentui/react-components', '@fluentui/react-icons']
   }
 })
