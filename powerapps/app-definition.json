@@ -1,0 +1,254 @@
+{
+  "appDefinition": {
+    "name": "VaksineApp - Vaccine Information System",
+    "description": "Modern vaccine information management system using Entra ID and DataVerse",
+    "version": "1.0.0",
+    "author": "VaksineApp Team",
+    "createdDate": "2024-01-01T00:00:00Z",
+    "lastModifiedDate": "2024-01-01T00:00:00Z"
+  },
+  "authentication": {
+    "provider": "EntraID",
+    "tenantId": "your-tenant-id",
+    "clientId": "your-app-id",
+    "redirectUri": "https://apps.powerapps.com/play/your-app-id",
+    "scopes": [
+      "User.Read",
+      "User.ReadBasic.All"
+    ]
+  },
+  "dataSources": [
+    {
+      "name": "cr_patients",
+      "type": "DataVerse",
+      "tableName": "cr_patients",
+      "permissions": {
+        "read": true,
+        "write": false,
+        "delete": false
+      }
+    },
+    {
+      "name": "cr_vaccinerecords", 
+      "type": "DataVerse",
+      "tableName": "cr_vaccinerecords",
+      "permissions": {
+        "read": true,
+        "write": true,
+        "delete": false
+      }
+    },
+    {
+      "name": "cr_vaccinetypes",
+      "type": "DataVerse", 
+      "tableName": "cr_vaccinetypes",
+      "permissions": {
+        "read": true,
+        "write": false,
+        "delete": false
+      }
+    },
+    {
+      "name": "cr_healthcareproviders",
+      "type": "DataVerse",
+      "tableName": "cr_healthcareproviders", 
+      "permissions": {
+        "read": true,
+        "write": false,
+        "delete": false
+      }
+    },
+    {
+      "name": "cr_appointments",
+      "type": "DataVerse",
+      "tableName": "cr_appointments",
+      "permissions": {
+        "read": true,
+        "write": true,
+        "delete": true
+      }
+    }
+  ],
+  "screens": [
+    {
+      "name": "LoginScreen",
+      "type": "Login",
+      "description": "Entra ID authentication screen",
+      "components": [
+        {
+          "name": "LoginButton",
+          "type": "Button",
+          "text": "Logg inn med Entra ID",
+          "onSelect": "EntraIDLogin()"
+        }
+      ]
+    },
+    {
+      "name": "PatientDashboard",
+      "type": "Dashboard",
+      "description": "Patient view of vaccination records",
+      "visibleTo": ["Patient"],
+      "components": [
+        {
+          "name": "PatientInfo",
+          "type": "Text",
+          "text": "Velkommen, " & User().FullName
+        },
+        {
+          "name": "VaccinationHistory",
+          "type": "Gallery",
+          "dataSource": "FilteredVaccinationRecords",
+          "template": "VaccinationRecordCard"
+        }
+      ]
+    },
+    {
+      "name": "ProviderDashboard", 
+      "type": "Dashboard",
+      "description": "Healthcare provider management interface",
+      "visibleTo": ["Healthcare Provider", "Admin"],
+      "components": [
+        {
+          "name": "ProviderInfo",
+          "type": "Text", 
+          "text": "Velkommen, " & User().FullName
+        },
+        {
+          "name": "PatientList",
+          "type": "Gallery",
+          "dataSource": "FilteredPatients",
+          "template": "PatientCard"
+        },
+        {
+          "name": "NewVaccinationButton",
+          "type": "Button",
+          "text": "Registrer vaksinasjon",
+          "onSelect": "Navigate(NewVaccinationScreen)"
+        }
+      ]
+    },
+    {
+      "name": "NewVaccinationScreen",
+      "type": "Form",
+      "description": "Form for recording new vaccinations",
+      "visibleTo": ["Healthcare Provider", "Admin"],
+      "components": [
+        {
+          "name": "PatientSelector",
+          "type": "ComboBox",
+          "dataSource": "cr_patients",
+          "searchFields": ["cr_firstname", "cr_lastname", "cr_personnummer"]
+        },
+        {
+          "name": "VaccineTypeSelector",
+          "type": "ComboBox", 
+          "dataSource": "cr_vaccinetypes",
+          "searchFields": ["cr_vaccinename"]
+        },
+        {
+          "name": "VaccinationDate",
+          "type": "DatePicker",
+          "defaultValue": "Today()"
+        },
+        {
+          "name": "LotNumber",
+          "type": "TextInput",
+          "placeholder": "Vaksine lot nummer"
+        },
+        {
+          "name": "Dosage",
+          "type": "NumberInput",
+          "placeholder": "Dosage"
+        },
+        {
+          "name": "SideEffects",
+          "type": "TextInput",
+          "placeholder": "Bivirkninger (hvis noen)"
+        },
+        {
+          "name": "Notes",
+          "type": "TextInput",
+          "placeholder": "Notater"
+        },
+        {
+          "name": "SaveButton",
+          "type": "Button",
+          "text": "Lagre vaksinasjon",
+          "onSelect": "SaveVaccination()"
+        }
+      ]
+    },
+    {
+      "name": "AdminDashboard",
+      "type": "Dashboard", 
+      "description": "System administration interface",
+      "visibleTo": ["Admin"],
+      "components": [
+        {
+          "name": "AdminInfo",
+          "type": "Text",
+          "text": "Administrator: " & User().FullName
+        },
+        {
+          "name": "SystemStats",
+          "type": "Gallery",
+          "dataSource": "SystemStatistics",
+          "template": "StatCard"
+        },
+        {
+          "name": "UserManagementButton",
+          "type": "Button",
+          "text": "Brukeradministrasjon",
+          "onSelect": "Navigate(UserManagementScreen)"
+        }
+      ]
+    }
+  ],
+  "formulas": {
+    "CurrentUser": "User()",
+    "UserPermissions": {
+      "IsPatient": "User().Email in cr_patients.cr_email",
+      "IsProvider": "User().Email in cr_healthcareproviders.cr_email", 
+      "IsAdmin": "User().Email in cr_admins.cr_email"
+    },
+    "FilteredVaccinationRecords": "Filter(cr_vaccinerecords, cr_patientid in Filter(cr_patients, cr_email = User().Email).cr_patientid)",
+    "FilteredPatients": "Filter(cr_patients, cr_healthcareproviderid in Filter(cr_healthcareproviders, cr_email = User().Email).cr_healthcareproviderid)",
+    "SystemStatistics": [
+      {
+        "title": "Totalt antall pasienter",
+        "value": "CountRows(cr_patients)"
+      },
+      {
+        "title": "Totalt antall vaksinasjoner", 
+        "value": "CountRows(cr_vaccinerecords)"
+      },
+      {
+        "title": "Aktive helsepersonell",
+        "value": "CountRows(Filter(cr_healthcareproviders, cr_isactive = true))"
+      }
+    ]
+  },
+  "themes": {
+    "primaryColor": "#0078D4",
+    "secondaryColor": "#106EBE", 
+    "accentColor": "#00BCF2",
+    "backgroundColor": "#F8F9FA",
+    "textColor": "#323130",
+    "fontFamily": "Segoe UI"
+  },
+  "localization": {
+    "defaultLanguage": "nb-NO",
+    "supportedLanguages": ["nb-NO", "en-US"],
+    "translations": {
+      "nb-NO": {
+        "welcome": "Velkommen",
+        "login": "Logg inn",
+        "logout": "Logg ut",
+        "vaccination": "Vaksinasjon",
+        "patient": "Pasient",
+        "provider": "Helsepersonell",
+        "admin": "Administrator"
+      }
+    }
+  }
+}

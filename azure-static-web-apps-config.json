@@ -1,0 +1,55 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/admin/*",
+      "allowedRoles": ["Admin"]
+    },
+    {
+      "route": "/vaccination/*",
+      "allowedRoles": ["HealthcareProvider", "Admin"]
+    },
+    {
+      "route": "/patients/*",
+      "allowedRoles": ["Patient", "HealthcareProvider", "Admin"]
+    },
+    {
+      "route": "/*",
+      "allowedRoles": ["authenticated"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,jpeg,gif,svg}", "/css/*", "/js/*"]
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".woff": "application/font-woff",
+    ".woff2": "application/font-woff2"
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://login.microsoftonline.com https://graph.microsoft.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://login.microsoftonline.com https://graph.microsoft.com https://*.crm4.dynamics.com https://*.azure-apim.net; frame-src 'self' https://login.microsoftonline.com;"
+  },
+  "auth": {
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "userDetailsClaim": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/{tenant-id}/v2.0",
+          "clientIdSettingName": "AZURE_CLIENT_ID",
+          "clientSecretSettingName": "AZURE_CLIENT_SECRET"
+        }
+      }
+    }
+  },
+  "platform": {
+    "apiRuntime": "node:18"
+  }
+}

@@ -1,0 +1,124 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #323130;
+  background-color: #f8f9fa;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom theme colors matching original app */
+:root {
+  --primary-color: #034B45;
+  --primary-light: #479a93;
+  --primary-dark: #1d726b;
+  --secondary-color: #00BCF2;
+  --success-color: #107c10;
+  --warning-color: #ff8c00;
+  --error-color: #d13438;
+  --neutral-50: #faf9f8;
+  --neutral-100: #f3f2f1;
+  --neutral-200: #edebe9;
+  --neutral-300: #e1dfdd;
+  --neutral-400: #d0d0d0;
+  --neutral-500: #a19f9d;
+  --neutral-600: #605e5c;
+  --neutral-700: #3b3a39;
+  --neutral-800: #323130;
+  --neutral-900: #201f1e;
+}
+
+/* Utility classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-5 { margin-bottom: 1.25rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-5 { margin-top: 1.25rem; }
+.mt-6 { margin-top: 1.5rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 0.75rem; }
+.p-4 { padding: 1rem; }
+.p-5 { padding: 1.25rem; }
+.p-6 { padding: 1.5rem; }
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error and success messages */
+.error-message {
+  color: var(--error-color);
+  background-color: #fef7f7;
+  border: 1px solid #f1aeb5;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.success-message {
+  color: var(--success-color);
+  background-color: #f7f9f7;
+  border: 1px solid #9fd89f;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+  
+  .mobile-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-hidden {
+    display: none;
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "Resources": [
+    {
+      "Name": "SampleImage",
+      "Schema": "i",
+      "IsSampleData": true,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "/ctrllib/image/images/SampleImage.svg",
+      "Path": "/ctrllib/image/images/SampleImage.svg",
+      "Content": "Image",
+      "ResourceKind": "Uri",
+      "RootPath": "ms-appx:///ctrllib/image/images/SampleImage.svg"
+    },
+    {
+      "Name": "TE_OsloKomm_MG_2777_web",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "a8ab13ac-784f-46c2-b8cf-35094d62de47.jpg",
+      "Path": "Assets\\Images\\a8ab13ac-784f-46c2-b8cf-35094d62de47.jpg",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/YThhYjEzYWMtNzg0Zi00NmMyLWI4Y2YtMzUwOTRkNjJkZTQ3.jpg?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=nMrHlQxZBwZPYAzOEX55dDhRvuY111IlKB1MRTKD1ng%3D"
+    },
+    {
+      "Name": "TE_OsloKomm_MG_0437_web",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "790729d1-de97-4fde-81f7-e2f5f20a7e29.jpg",
+      "Path": "Assets\\Images\\790729d1-de97-4fde-81f7-e2f5f20a7e29.jpg",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/NzkwNzI5ZDEtZGU5Ny00ZmRlLTgxZjctZTJmNWYyMGE3ZTI5.jpg?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=ha3awNnXjwTYYeJJHNZfk9FwEX%2B1QEJ4q5VKur0Hmpo%3D"
+    },
+    {
+      "Name": "Oslo-logo-hvit-RGB",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "7c0c571c-6381-4634-88a5-271e7d8456f8.png",
+      "Path": "Assets\\Images\\7c0c571c-6381-4634-88a5-271e7d8456f8.png",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/N2MwYzU3MWMtNjM4MS00NjM0LTg4YTUtMjcxZTdkODQ1NmY4.png?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=0yAvZ22uipdnr7mGa%2FObKd5LsJRQT8WLI%2BWt5hrYID4%3D"
+    },
+    {
+      "Name": "Fornebu T-banestasjon på Fornebubanen",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "88fb9322-1fe3-4cbc-94e5-3fd03ca22caf.JPG",
+      "Path": "Assets\\Images\\88fb9322-1fe3-4cbc-94e5-3fd03ca22caf.JPG",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/ODhmYjkzMjItMWZlMy00Y2JjLTk0ZTUtM2ZkMDNjYTIyY2Fm.jpg?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=76Eorgl59zZP3%2BeHYeijn5bav2xgEiHWL81o3w81MM8%3D"
+    },
+    {
+      "Name": "_DSC8813",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "840c74c8-bcd7-48f1-9ea5-4162ed6b687d.jpg",
+      "Path": "Assets\\Images\\840c74c8-bcd7-48f1-9ea5-4162ed6b687d.jpg",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/ODQwYzc0YzgtYmNkNy00OGYxLTllYTUtNDE2MmVkNmI2ODdk.jpg?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=y2EZlaT9oqlcOTo0ZhmIOeDJvRmknDPzxzc%2Ftyl8XFs%3D"
+    },
+    {
+      "Name": "_DSC9186",
+      "Schema": "i",
+      "IsSampleData": false,
+      "IsWritable": false,
+      "Type": "ResourceInfo",
+      "FileName": "8e57d521-895c-40eb-9caa-cdba55f0ba12.jpg",
+      "Path": "Assets\\Images\\8e57d521-895c-40eb-9caa-cdba55f0ba12.jpg",
+      "Content": "Image",
+      "ResourceKind": "LocalFile",
+      "RootPath": "https://dsprdil107weu.blob.core.windows.net/27519bdc-b05f-4839-aede-d3292d5b6fef-1/resource/OGU1N2Q1MjEtODk1Yy00MGViLTljYWEtY2RiYTU1ZjBiYTEy.jpg?skoid=58690ece-ec83-4ce2-9ce8-883d4d6a54ee&sktid=975f013f-7f24-47e8-a7d3-abc4752bf346&skt=2025-09-15T20%3A42%3A12Z&ske=2025-09-16T20%3A57%3A12Z&sks=b&skv=2023-01-03&sv=2023-01-03&spr=https&se=2025-09-16T20%3A57%3A12Z&sr=b&sp=r&sig=y04MxQzMxsnIP4iHcMWfdogzspO5eo4M3%2BBGYWlSn4I%3D"
+    }
+  ]
+}

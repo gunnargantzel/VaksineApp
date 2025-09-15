@@ -1,0 +1,32 @@
+{
+  "Components": [
+    {
+      "Name": "Dialog",
+      "TemplateName": "3fbe17080c48488ab2e0657ea6aebc32",
+      "Description": "",
+      "AllowCustomization": true,
+      "AllowAccessToGlobals": false
+    },
+    {
+      "Name": "Header",
+      "TemplateName": "11585106abd9458f808c95a9a026c717",
+      "Description": "",
+      "AllowCustomization": true,
+      "AllowAccessToGlobals": false
+    },
+    {
+      "Name": "Panel",
+      "TemplateName": "2d50b18711c4402782299cf41e9f109f",
+      "Description": "",
+      "AllowCustomization": true,
+      "AllowAccessToGlobals": false
+    },
+    {
+      "Name": "Header_3",
+      "TemplateName": "308e95fc214844ac8d6c8070114096e3",
+      "Description": "",
+      "AllowCustomization": true,
+      "AllowAccessToGlobals": false
+    }
+  ]
+}
