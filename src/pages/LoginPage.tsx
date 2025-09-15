@@ -1,89 +1,28 @@
 import React, { useEffect } from 'react'
 import { 
-  makeStyles,
-  tokens,
   Button,
-  Text,
+  Typography,
   Card,
-  CardHeader,
-  CardPreview,
-  Image,
-  Spinner
-} from '@fluentui/react-components'
+  CardContent,
+  Box,
+  CircularProgress,
+  Container,
+  Grid,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
+} from '@mui/material'
 import { 
-  ShieldRegular,
-  PeopleRegular,
-  DocumentRegular,
-  CheckmarkCircleRegular
-} from '@fluentui/react-icons'
+  Security,
+  People,
+  Description,
+  CheckCircle
+} from '@mui/icons-material'
 import { useMsal } from '@azure/msal-react'
 import { login } from '../services/authService'
 
-const useStyles = makeStyles({
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.colorNeutralBackground2,
-    padding: tokens.spacingVerticalL,
-  },
-  loginCard: {
-    maxWidth: '500px',
-    width: '100%',
-    padding: tokens.spacingVerticalXXL,
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: tokens.spacingVerticalXXL,
-  },
-  title: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorBrandForeground1,
-    marginBottom: tokens.spacingVerticalS,
-  },
-  subtitle: {
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
-    marginBottom: tokens.spacingVerticalL,
-  },
-  features: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: tokens.spacingVerticalM,
-    marginBottom: tokens.spacingVerticalXXL,
-  },
-  feature: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
-    padding: tokens.spacingVerticalM,
-    backgroundColor: tokens.colorNeutralBackground1,
-    borderRadius: tokens.borderRadiusMedium,
-  },
-  featureIcon: {
-    color: tokens.colorBrandForeground1,
-  },
-  loginButton: {
-    width: '100%',
-    marginBottom: tokens.spacingVerticalM,
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '200px',
-  },
-  errorMessage: {
-    color: tokens.colorPaletteRedForeground1,
-    textAlign: 'center',
-    marginTop: tokens.spacingVerticalM,
-  },
-})
-
 const LoginPage: React.FC = () => {
-  const styles = useStyles()
   const { instance, accounts, inProgress } = useMsal()
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -111,69 +50,89 @@ const LoginPage: React.FC = () => {
 
   if (inProgress === 'login') {
     return (
-      <div className={styles.loadingContainer}>
-        <Spinner size="large" label="Logger inn..." />
-      </div>
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        height="100vh"
+      >
+        <CircularProgress size={60} />
+      </Box>
     )
   }
 
   return (
-    <div className={styles.container}>
-      <Card className={styles.loginCard}>
-        <CardHeader>
-          <div className={styles.header}>
-            <Text className={styles.title}>
-              VaksineApp
-            </Text>
-            <Text className={styles.subtitle}>
-              Moderne vaksinasjonsadministrasjon med Entra ID og DataVerse
-            </Text>
-          </div>
-        </CardHeader>
+    <Container maxWidth="sm">
+      <Box 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center" 
+        minHeight="100vh"
+        py={4}
+      >
+        <Card sx={{ width: '100%', maxWidth: 500 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box textAlign="center" mb={4}>
+              <Typography variant="h3" component="h1" gutterBottom color="primary">
+                VaksineApp
+              </Typography>
+              <Typography variant="body1" color="text.secondary" mb={3}>
+                Moderne vaksinasjonsadministrasjon med Entra ID og DataVerse
+              </Typography>
+            </Box>
 
-        <CardPreview>
-          <div className={styles.features}>
-            <div className={styles.feature}>
-              <ShieldRegular className={styles.featureIcon} />
-              <Text>Sikker autentisering</Text>
-            </div>
-            <div className={styles.feature}>
-              <PeopleRegular className={styles.featureIcon} />
-              <Text>Pasientadministrasjon</Text>
-            </div>
-            <div className={styles.feature}>
-              <DocumentRegular className={styles.featureIcon} />
-              <Text>Vaksinasjonsjournaler</Text>
-            </div>
-            <div className={styles.feature}>
-              <CheckmarkCircleRegular className={styles.featureIcon} />
-              <Text>Integrasjon med nasjonale registre</Text>
-            </div>
-          </div>
+            <Grid container spacing={2} mb={4}>
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Security color="primary" />
+                  <Typography variant="body2">Sikker autentisering</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <People color="primary" />
+                  <Typography variant="body2">Pasientadministrasjon</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Description color="primary" />
+                  <Typography variant="body2">Vaksinasjonsjournaler</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <CheckCircle color="primary" />
+                  <Typography variant="body2">Integrasjon med nasjonale registre</Typography>
+                </Box>
+              </Grid>
+            </Grid>
 
-          <Button
-            className={styles.loginButton}
-            appearance="primary"
-            size="large"
-            onClick={handleLogin}
-            disabled={isLoading}
-            icon={isLoading ? <Spinner size="tiny" /> : undefined}
-          >
-            {isLoading ? 'Logger inn...' : 'Logg inn med Entra ID'}
-          </Button>
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleLogin}
+              disabled={isLoading}
+              startIcon={isLoading ? <CircularProgress size={20} /> : undefined}
+              sx={{ mb: 2 }}
+            >
+              {isLoading ? 'Logger inn...' : 'Logg inn med Entra ID'}
+            </Button>
 
-          {error && (
-            <Text className={styles.errorMessage}>
-              {error}
-            </Text>
-          )}
+            {error && (
+              <Typography color="error" variant="body2" textAlign="center" mt={1}>
+                {error}
+              </Typography>
+            )}
 
-          <Text size={200} style={{ textAlign: 'center', color: tokens.colorNeutralForeground3 }}>
-            Logg inn med din organisasjonskonto for å få tilgang til systemet
-          </Text>
-        </CardPreview>
-      </Card>
-    </div>
+            <Typography variant="caption" color="text.secondary" textAlign="center" display="block">
+              Logg inn med din organisasjonskonto for å få tilgang til systemet
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   )
 }
 

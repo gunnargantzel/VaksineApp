@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
-import { Spinner } from '@fluentui/react-components'
+import { CircularProgress, Box } from '@mui/material'
 import Layout from './components/Layout/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -20,14 +20,14 @@ function App() {
   // Show loading spinner while authentication is in progress
   if (authLoading || rolesLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Spinner size="large" label="Laster..." />
-      </div>
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        height="100vh"
+      >
+        <CircularProgress size={60} />
+      </Box>
     )
   }
 

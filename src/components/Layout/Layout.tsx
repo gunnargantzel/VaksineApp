@@ -1,123 +1,42 @@
 import React from 'react'
 import { 
-  FluentProvider, 
-  webLightTheme,
-  makeStyles,
-  tokens,
+  AppBar,
+  Toolbar,
+  Typography,
   Button,
+  Box,
   Avatar,
   Menu,
-  MenuTrigger,
-  MenuPopover,
-  MenuList,
   MenuItem,
-  MenuDivider,
-  Text,
-  Spinner
-} from '@fluentui/react-components'
+  IconButton,
+  Container,
+  CircularProgress
+} from '@mui/material'
 import { 
-  PersonRegular,
-  SignOutRegular,
-  SettingsRegular,
-  HomeRegular,
-  PeopleRegular,
-  ShieldRegular
-} from '@fluentui/react-icons'
+  Home,
+  People,
+  Vaccines,
+  Settings,
+  Person,
+  Logout
+} from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useUserRoles } from '../../hooks/useUserRoles'
 import { logout } from '../../services/authService'
 
-const useStyles = makeStyles({
-  layout: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-    backgroundColor: tokens.colorNeutralBackground1,
-  },
-  header: {
-    backgroundColor: tokens.colorBrandBackground,
-    color: tokens.colorNeutralForegroundOnBrand,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    boxShadow: tokens.shadow4,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalL,
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalM,
-  },
-  logo: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorNeutralForegroundOnBrand,
-    textDecoration: 'none',
-  },
-  navigation: {
-    display: 'flex',
-    gap: tokens.spacingHorizontalS,
-  },
-  navButton: {
-    color: tokens.colorNeutralForegroundOnBrand,
-    backgroundColor: 'transparent',
-    border: 'none',
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
-    borderRadius: tokens.borderRadiusMedium,
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
-    '&:hover': {
-      backgroundColor: tokens.colorBrandBackgroundHover,
-    },
-    '&.active': {
-      backgroundColor: tokens.colorBrandBackgroundPressed,
-    },
-  },
-  main: {
-    flex: 1,
-    padding: tokens.spacingVerticalL,
-    maxWidth: '1200px',
-    margin: '0 auto',
-    width: '100%',
-  },
-  footer: {
-    backgroundColor: tokens.colorNeutralBackground2,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    textAlign: 'center',
-    color: tokens.colorNeutralForeground2,
-    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-  },
-})
-
 interface LayoutProps {
   children: React.ReactNode
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const styles = useStyles()
   const navigate = useNavigate()
   const location = useLocation()
-  const { instance } = useMsal()
+  const { instance, accounts } = useMsal()
   const { user } = useAuth()
   const { roles, loading: rolesLoading } = useUserRoles()
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
 
   const handleLogout = async () => {
     try {
@@ -126,10 +45,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout failed:', error)
     }
+    setAnchorEl(null)
   }
 
   const handleNavigation = (path: string) => {
     navigate(path)
+  }
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
   }
 
   const isActiveRoute = (path: string) => {
@@ -138,96 +66,128 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   if (rolesLoading) {
     return (
-      <div className={styles.loadingContainer}>
-        <Spinner size="large" label="Laster brukerroller..." />
-      </div>
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        height="100vh"
+      >
+        <CircularProgress size={60} />
+      </Box>
     )
   }
 
   return (
-    <FluentProvider theme={webLightTheme}>
-      <div className={styles.layout}>
-        <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <a href="/" className={styles.logo}>
-              VaksineApp
-            </a>
-            <nav className={styles.navigation}>
-              <button
-                className={`${styles.navButton} ${isActiveRoute('/dashboard') ? 'active' : ''}`}
-                onClick={() => handleNavigation('/dashboard')}
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBar position="static" color="primary">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            VaksineApp
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
+            <Button
+              color="inherit"
+              startIcon={<Home />}
+              onClick={() => handleNavigation('/dashboard')}
+              sx={{ 
+                backgroundColor: isActiveRoute('/dashboard') ? 'rgba(255,255,255,0.1)' : 'transparent' 
+              }}
+            >
+              Dashboard
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<People />}
+              onClick={() => handleNavigation('/patients')}
+              sx={{ 
+                backgroundColor: isActiveRoute('/patients') ? 'rgba(255,255,255,0.1)' : 'transparent' 
+              }}
+            >
+              Pasienter
+            </Button>
+            {(roles.includes('HealthcareProvider') || roles.includes('Admin')) && (
+              <Button
+                color="inherit"
+                startIcon={<Vaccines />}
+                onClick={() => handleNavigation('/vaccination')}
+                sx={{ 
+                  backgroundColor: isActiveRoute('/vaccination') ? 'rgba(255,255,255,0.1)' : 'transparent' 
+                }}
               >
-                <HomeRegular />
-                Dashboard
-              </button>
-              <button
-                className={`${styles.navButton} ${isActiveRoute('/patients') ? 'active' : ''}`}
-                onClick={() => handleNavigation('/patients')}
+                Vaksinasjon
+              </Button>
+            )}
+            {roles.includes('Admin') && (
+              <Button
+                color="inherit"
+                startIcon={<Settings />}
+                onClick={() => handleNavigation('/admin')}
+                sx={{ 
+                  backgroundColor: isActiveRoute('/admin') ? 'rgba(255,255,255,0.1)' : 'transparent' 
+                }}
               >
-                <PeopleRegular />
-                Pasienter
-              </button>
-              {(roles.includes('HealthcareProvider') || roles.includes('Admin')) && (
-                <button
-                  className={`${styles.navButton} ${isActiveRoute('/vaccination') ? 'active' : ''}`}
-                  onClick={() => handleNavigation('/vaccination')}
-                >
-                  <ShieldRegular />
-                  Vaksinasjon
-                </button>
-              )}
-              {roles.includes('Admin') && (
-                <button
-                  className={`${styles.navButton} ${isActiveRoute('/admin') ? 'active' : ''}`}
-                  onClick={() => handleNavigation('/admin')}
-                >
-                  <SettingsRegular />
-                  Admin
-                </button>
-              )}
-            </nav>
-          </div>
-          <div className={styles.headerRight}>
-            <div className={styles.userMenu}>
-              <Text>{user?.name}</Text>
-              <Menu>
-                <MenuTrigger disableButtonEnhancement>
-                  <Avatar
-                    name={user?.name}
-                    size={32}
-                    color="colorful"
-                  />
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem icon={<PersonRegular />}>
-                      Profil
-                    </MenuItem>
-                    <MenuItem icon={<SettingsRegular />}>
-                      Innstillinger
-                    </MenuItem>
-                    <MenuDivider />
-                    <MenuItem icon={<SignOutRegular />} onClick={handleLogout}>
-                      Logg ut
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
-            </div>
-          </div>
-        </header>
+                Admin
+              </Button>
+            )}
+          </Box>
 
-        <main className={styles.main}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2">
+              {user?.name}
+            </Typography>
+            <IconButton
+              size="large"
+              onClick={handleMenuOpen}
+              color="inherit"
+            >
+              <Avatar sx={{ width: 32, height: 32 }}>
+                {user?.givenName?.[0]}{user?.surname?.[0]}
+              </Avatar>
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleMenuClose}>
+                <Person sx={{ mr: 1 }} />
+                Profil
+              </MenuItem>
+              <MenuItem onClick={handleMenuClose}>
+                <Settings sx={{ mr: 1 }} />
+                Innstillinger
+              </MenuItem>
+              <MenuItem onClick={handleLogout}>
+                <Logout sx={{ mr: 1 }} />
+                Logg ut
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
+        <Container maxWidth="xl">
           {children}
-        </main>
+        </Container>
+      </Box>
 
-        <footer className={styles.footer}>
-          <Text size={200}>
-            © 2024 VaksineApp - Moderne vaksinasjonsadministrasjon
-          </Text>
-        </footer>
-      </div>
-    </FluentProvider>
+      <Box 
+        component="footer" 
+        sx={{ 
+          py: 2, 
+          px: 2, 
+          mt: 'auto', 
+          backgroundColor: 'grey.100',
+          textAlign: 'center'
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          © 2024 VaksineApp - Moderne vaksinasjonsadministrasjon
+        </Typography>
+      </Box>
+    </Box>
   )
 }
 
