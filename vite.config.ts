@@ -14,5 +14,14 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+  },
+  resolve: {
+    alias: {
+      // Fix for MSAL browser compatibility
+      'node-fetch': 'whatwg-fetch',
+    }
+  },
+  optimizeDeps: {
+    include: ['@azure/msal-browser', '@azure/msal-react']
   }
 })

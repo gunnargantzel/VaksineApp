@@ -13,6 +13,13 @@ import './index.css'
 // Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig)
 
+// Initialize MSAL
+msalInstance.initialize().then(() => {
+  console.log('MSAL initialized successfully')
+}).catch((error) => {
+  console.error('MSAL initialization failed:', error)
+})
+
 // Create React Query client
 const queryClient = new QueryClient({
   defaultOptions: {

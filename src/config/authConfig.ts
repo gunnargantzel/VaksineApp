@@ -34,6 +34,9 @@ export const msalConfig: Configuration = {
         }
       },
     },
+    // Fix for browser compatibility
+    allowNativeBroker: false,
+    allowRedirectInIframe: false,
   },
 }
 
