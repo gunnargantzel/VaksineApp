@@ -1,43 +1,38 @@
 import React, { useState } from 'react'
 import { 
-  makeStyles,
-  tokens,
-  Text,
+  Typography,
   Card,
-  CardHeader,
-  CardPreview,
+  CardContent,
   Button,
-  Input,
-  Spinner,
+  TextField,
+  CircularProgress,
   Table,
-  TableHeader,
-  TableHeaderCell,
   TableBody,
-  TableRow,
   TableCell,
-  Badge,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Box,
+  Grid,
   Dialog,
-  DialogTrigger,
-  DialogSurface,
   DialogTitle,
-  DialogBody,
-  DialogActions,
   DialogContent,
-  Field,
-  DatePicker,
-  Combobox,
-  Option
-} from '@fluentui/react-components'
+  DialogActions,
+  IconButton,
+  Chip
+} from '@mui/material'
 import { 
-  SearchRegular,
-  AddRegular,
-  PersonRegular,
-  PhoneRegular,
-  MailRegular,
-  CalendarRegular,
-  DocumentRegular,
-  EditRegular
-} from '@fluentui/react-icons'
+  Search,
+  Add,
+  Person,
+  Phone,
+  Email,
+  CalendarToday,
+  Description,
+  Edit,
+  Close
+} from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { useAuth } from '../hooks/useAuth'
 import { useUserRoles } from '../hooks/useUserRoles'
@@ -47,69 +42,7 @@ import { Patient, FolkeregisterPerson } from '../types'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
 
-const useStyles = makeStyles({
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: tokens.spacingVerticalL,
-  },
-  header: {
-    marginBottom: tokens.spacingVerticalXXL,
-  },
-  title: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorBrandForeground1,
-    marginBottom: tokens.spacingVerticalS,
-  },
-  subtitle: {
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
-  },
-  searchCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  searchForm: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: tokens.spacingVerticalM,
-    alignItems: 'end',
-  },
-  resultsCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  tableContainer: {
-    overflowX: 'auto',
-  },
-  actionButtons: {
-    display: 'flex',
-    gap: tokens.spacingHorizontalS,
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '200px',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: tokens.spacingVerticalXXL,
-    color: tokens.colorNeutralForeground2,
-  },
-  patientDetails: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: tokens.spacingVerticalM,
-  },
-  detailItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
-  },
-})
-
 const PatientSearchPage: React.FC = () => {
-  const styles = useStyles()
   const { user } = useAuth()
   const { roles } = useUserRoles()
   const queryClient = useQueryClient()
@@ -167,233 +100,270 @@ const PatientSearchPage: React.FC = () => {
   const canEditPatient = roles.includes('HealthcareProvider') || roles.includes('Admin')
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Text className={styles.title}>
+    <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom color="primary">
           Pasientoppslag
-        </Text>
-        <Text className={styles.subtitle}>
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
           Søk etter og administrer pasientdata
-        </Text>
-      </div>
+        </Typography>
+      </Box>
 
-      <Card className={styles.searchCard}>
-        <CardHeader>
-          <Text size={400} weight="semibold">
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
             Søk etter pasienter
-          </Text>
-        </CardHeader>
-        <CardPreview>
-          <div className={styles.searchForm}>
-            <Field label="Søk etter navn eller personnummer">
-              <Input
+          </Typography>
+          <Grid container spacing={2} alignItems="end">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Søk etter navn eller personnummer"
                 placeholder="Skriv navn eller personnummer..."
                 value={searchQuery}
-                onChange={(_, data) => setSearchQuery(data.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-            </Field>
-            <Button
-              appearance="primary"
-              onClick={handleSearch}
-              icon={<SearchRegular />}
-              disabled={!searchQuery.trim()}
-            >
-              Søk i database
-            </Button>
-            <Button
-              appearance="secondary"
-              onClick={handleFolkeregisterSearch}
-              icon={<SearchRegular />}
-              disabled={!searchQuery.trim()}
-            >
-              Søk i folkeregister
-            </Button>
-          </div>
-        </CardPreview>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleSearch}
+                startIcon={<Search />}
+                disabled={!searchQuery.trim()}
+              >
+                Søk i database
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleFolkeregisterSearch}
+                startIcon={<Search />}
+                disabled={!searchQuery.trim()}
+              >
+                Søk i folkeregister
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
       </Card>
 
       {canCreatePatient && (
-        <Card className={styles.searchCard}>
-          <CardPreview>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
             <Button
-              appearance="primary"
+              variant="contained"
               onClick={() => setIsCreateOpen(true)}
-              icon={<AddRegular />}
+              startIcon={<Add />}
             >
               Registrer ny pasient
             </Button>
-          </CardPreview>
+          </CardContent>
         </Card>
       )}
 
-      <Card className={styles.resultsCard}>
-        <CardHeader>
-          <Text size={400} weight="semibold">
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
             Søkeresultater
-          </Text>
-        </CardHeader>
-        <CardPreview>
+          </Typography>
           {patientsLoading ? (
-            <div className={styles.loadingContainer}>
-              <Spinner size="large" label="Søker etter pasienter..." />
-            </div>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+              <CircularProgress size={60} />
+            </Box>
           ) : patients && patients.length > 0 ? (
-            <div className={styles.tableContainer}>
+            <TableContainer component={Paper}>
               <Table>
-                <TableHeader>
+                <TableHead>
                   <TableRow>
-                    <TableHeaderCell>Navn</TableHeaderCell>
-                    <TableHeaderCell>Personnummer</TableHeaderCell>
-                    <TableHeaderCell>Fødselsdato</TableHeaderCell>
-                    <TableHeaderCell>Kontakt</TableHeaderCell>
-                    <TableHeaderCell>Handlinger</TableHeaderCell>
+                    <TableCell>Navn</TableCell>
+                    <TableCell>Personnummer</TableCell>
+                    <TableCell>Fødselsdato</TableCell>
+                    <TableCell>Kontakt</TableCell>
+                    <TableCell>Handlinger</TableCell>
                   </TableRow>
-                </TableHeader>
+                </TableHead>
                 <TableBody>
                   {patients.map((patient) => (
                     <TableRow key={patient.sogv_vaksineinnbyggerid}>
                       <TableCell>
-                        <div className={styles.detailItem}>
-                          <PersonRegular />
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Person />
                           {patient.sogv_fornavn} {patient.sogv_etternavn}
-                        </div>
+                        </Box>
                       </TableCell>
                       <TableCell>{patient.sogv_personnummer}</TableCell>
                       <TableCell>{formatDate(patient.sogv_fodselsdato)}</TableCell>
                       <TableCell>
-                        <div>
+                        <Box>
                           {patient.sogv_telefon && (
-                            <div className={styles.detailItem}>
-                              <PhoneRegular />
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Phone fontSize="small" />
                               {patient.sogv_telefon}
-                            </div>
+                            </Box>
                           )}
                           {patient.sogv_epost && (
-                            <div className={styles.detailItem}>
-                              <MailRegular />
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Email fontSize="small" />
                               {patient.sogv_epost}
-                            </div>
+                            </Box>
                           )}
-                        </div>
+                        </Box>
                       </TableCell>
                       <TableCell>
-                        <div className={styles.actionButtons}>
+                        <Box display="flex" gap={1}>
                           <Button
                             size="small"
                             onClick={() => handlePatientSelect(patient)}
-                            icon={<DocumentRegular />}
+                            startIcon={<Description />}
                           >
                             Vis detaljer
                           </Button>
                           {canEditPatient && (
                             <Button
                               size="small"
-                              appearance="secondary"
-                              icon={<EditRegular />}
+                              variant="outlined"
+                              startIcon={<Edit />}
                             >
                               Rediger
                             </Button>
                           )}
-                        </div>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </TableContainer>
           ) : (
-            <div className={styles.emptyState}>
-              <Text size={300}>
+            <Box textAlign="center" py={4}>
+              <Typography variant="body1" color="text.secondary">
                 Ingen pasienter funnet. Prøv et annet søk.
-              </Text>
-            </div>
+              </Typography>
+            </Box>
           )}
-        </CardPreview>
+        </CardContent>
       </Card>
 
       {/* Patient Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={(_, data) => setIsDetailsOpen(data.open)}>
-        <DialogSurface>
-          <DialogTitle>
-            Pasientdetaljer
-          </DialogTitle>
-          <DialogBody>
-            {selectedPatient && (
-              <div className={styles.patientDetails}>
-                <div>
-                  <Text weight="semibold">Navn:</Text>
-                  <Text>{selectedPatient.sogv_fornavn} {selectedPatient.sogv_etternavn}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Personnummer:</Text>
-                  <Text>{selectedPatient.sogv_personnummer}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Fødselsdato:</Text>
-                  <Text>{formatDate(selectedPatient.sogv_fodselsdato)}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Telefon:</Text>
-                  <Text>{selectedPatient.sogv_telefon || 'Ikke oppgitt'}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">E-post:</Text>
-                  <Text>{selectedPatient.sogv_epost || 'Ikke oppgitt'}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Adresse:</Text>
-                  <Text>{selectedPatient.sogv_adresse || 'Ikke oppgitt'}</Text>
-                </div>
-              </div>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Lukk</Button>
-            </DialogTrigger>
-            <Button appearance="primary">Se vaksinasjonsjournal</Button>
-          </DialogActions>
-        </DialogSurface>
+      <Dialog open={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Pasientdetaljer
+          <IconButton
+            onClick={() => setIsDetailsOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedPatient && (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Navn:</Typography>
+                <Typography>{selectedPatient.sogv_fornavn} {selectedPatient.sogv_etternavn}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Personnummer:</Typography>
+                <Typography>{selectedPatient.sogv_personnummer}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Fødselsdato:</Typography>
+                <Typography>{formatDate(selectedPatient.sogv_fodselsdato)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Telefon:</Typography>
+                <Typography>{selectedPatient.sogv_telefon || 'Ikke oppgitt'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">E-post:</Typography>
+                <Typography>{selectedPatient.sogv_epost || 'Ikke oppgitt'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Adresse:</Typography>
+                <Typography>{selectedPatient.sogv_adresse || 'Ikke oppgitt'}</Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDetailsOpen(false)}>Lukk</Button>
+          <Button variant="contained">Se vaksinasjonsjournal</Button>
+        </DialogActions>
       </Dialog>
 
       {/* Create Patient Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={(_, data) => setIsCreateOpen(data.open)}>
-        <DialogSurface>
-          <DialogTitle>
-            Registrer ny pasient
-          </DialogTitle>
-          <DialogBody>
-            <div className={styles.patientDetails}>
-              <Field label="Fornavn" required>
-                <Input placeholder="Skriv fornavn..." />
-              </Field>
-              <Field label="Etternavn" required>
-                <Input placeholder="Skriv etternavn..." />
-              </Field>
-              <Field label="Personnummer" required>
-                <Input placeholder="DDMMÅÅÅÅÅÅÅ" />
-              </Field>
-              <Field label="Fødselsdato" required>
-                <DatePicker placeholder="Velg fødselsdato..." />
-              </Field>
-              <Field label="Telefon">
-                <Input placeholder="Skriv telefonnummer..." />
-              </Field>
-              <Field label="E-post">
-                <Input placeholder="Skriv e-postadresse..." />
-              </Field>
-            </div>
-          </DialogBody>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Avbryt</Button>
-            </DialogTrigger>
-            <Button appearance="primary">Registrer pasient</Button>
-          </DialogActions>
-        </DialogSurface>
+      <Dialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Registrer ny pasient
+          <IconButton
+            onClick={() => setIsCreateOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Fornavn"
+                required
+                placeholder="Skriv fornavn..."
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Etternavn"
+                required
+                placeholder="Skriv etternavn..."
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Personnummer"
+                required
+                placeholder="DDMMÅÅÅÅÅÅÅ"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Fødselsdato"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Telefon"
+                placeholder="Skriv telefonnummer..."
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="E-post"
+                type="email"
+                placeholder="Skriv e-postadresse..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsCreateOpen(false)}>Avbryt</Button>
+          <Button variant="contained">Registrer pasient</Button>
+        </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   )
 }
 

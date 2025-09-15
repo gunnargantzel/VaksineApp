@@ -1,43 +1,40 @@
 import React, { useState } from 'react'
 import { 
-  makeStyles,
-  tokens,
-  Text,
+  Typography,
   Card,
-  CardHeader,
-  CardPreview,
+  CardContent,
   Button,
-  Input,
-  Spinner,
+  TextField,
+  CircularProgress,
   Table,
-  TableHeader,
-  TableHeaderCell,
   TableBody,
-  TableRow,
   TableCell,
-  Badge,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Box,
+  Grid,
   Dialog,
-  DialogTrigger,
-  DialogSurface,
   DialogTitle,
-  DialogBody,
-  DialogActions,
   DialogContent,
-  Field,
-  DatePicker,
-  Combobox,
-  Option,
-  Textarea
-} from '@fluentui/react-components'
+  DialogActions,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Chip
+} from '@mui/material'
 import { 
-  AddRegular,
-  ShieldRegular,
-  CalendarRegular,
-  PersonRegular,
-  EditRegular,
-  DeleteRegular,
-  DocumentRegular
-} from '@fluentui/react-icons'
+  Add,
+  Vaccines,
+  CalendarToday,
+  Person,
+  Edit,
+  Description,
+  Close
+} from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { useAuth } from '../hooks/useAuth'
 import { useUserRoles } from '../hooks/useUserRoles'
@@ -46,72 +43,7 @@ import { VaccinationRecord, VaccineType, Patient, VaccinationFormData } from '..
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
 
-const useStyles = makeStyles({
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: tokens.spacingVerticalL,
-  },
-  header: {
-    marginBottom: tokens.spacingVerticalXXL,
-  },
-  title: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorBrandForeground1,
-    marginBottom: tokens.spacingVerticalS,
-  },
-  subtitle: {
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
-  },
-  actionCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  recordsCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  tableContainer: {
-    overflowX: 'auto',
-  },
-  actionButtons: {
-    display: 'flex',
-    gap: tokens.spacingHorizontalS,
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '200px',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: tokens.spacingVerticalXXL,
-    color: tokens.colorNeutralForeground2,
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: tokens.spacingVerticalM,
-  },
-  statusBadge: {
-    '&.completed': {
-      backgroundColor: tokens.colorPaletteGreenBackground2,
-      color: tokens.colorPaletteGreenForeground2,
-    },
-    '&.pending': {
-      backgroundColor: tokens.colorPaletteYellowBackground2,
-      color: tokens.colorPaletteYellowForeground2,
-    },
-    '&.cancelled': {
-      backgroundColor: tokens.colorPaletteRedBackground2,
-      color: tokens.colorPaletteRedForeground2,
-    },
-  },
-})
-
 const VaccinationPage: React.FC = () => {
-  const styles = useStyles()
   const { user } = useAuth()
   const { roles } = useUserRoles()
   const queryClient = useQueryClient()
@@ -201,264 +133,286 @@ const VaccinationPage: React.FC = () => {
 
   if (!canManageVaccinations) {
     return (
-      <div className={styles.container}>
-        <div className={styles.emptyState}>
-          <Text size={300}>
+      <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: 3 }}>
+        <Box textAlign="center" py={4}>
+          <Typography variant="body1" color="text.secondary">
             Du har ikke tilgang til vaksinasjonsadministrasjon.
-          </Text>
-        </div>
-      </div>
+          </Typography>
+        </Box>
+      </Box>
     )
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Text className={styles.title}>
+    <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom color="primary">
           Vaksinasjonsadministrasjon
-        </Text>
-        <Text className={styles.subtitle}>
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
           Registrer og administrer vaksinasjoner
-        </Text>
-      </div>
+        </Typography>
+      </Box>
 
-      <Card className={styles.actionCard}>
-        <CardPreview>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
           <Button
-            appearance="primary"
+            variant="contained"
             onClick={() => setIsCreateOpen(true)}
-            icon={<AddRegular />}
+            startIcon={<Add />}
           >
             Registrer ny vaksinasjon
           </Button>
-        </CardPreview>
+        </CardContent>
       </Card>
 
-      <Card className={styles.recordsCard}>
-        <CardHeader>
-          <Text size={400} weight="semibold">
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
             Vaksinasjonsjournaler
-          </Text>
-        </CardHeader>
-        <CardPreview>
+          </Typography>
           {recordsLoading ? (
-            <div className={styles.loadingContainer}>
-              <Spinner size="large" label="Laster vaksinasjonsjournaler..." />
-            </div>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+              <CircularProgress size={60} />
+            </Box>
           ) : vaccinationRecords && vaccinationRecords.length > 0 ? (
-            <div className={styles.tableContainer}>
+            <TableContainer component={Paper}>
               <Table>
-                <TableHeader>
+                <TableHead>
                   <TableRow>
-                    <TableHeaderCell>Pasient</TableHeaderCell>
-                    <TableHeaderCell>Vaksine</TableHeaderCell>
-                    <TableHeaderCell>Dato</TableHeaderCell>
-                    <TableHeaderCell>Lot nummer</TableHeaderCell>
-                    <TableHeaderCell>Dosage</TableHeaderCell>
-                    <TableHeaderCell>Handlinger</TableHeaderCell>
+                    <TableCell>Pasient</TableCell>
+                    <TableCell>Vaksine</TableCell>
+                    <TableCell>Dato</TableCell>
+                    <TableCell>Lot nummer</TableCell>
+                    <TableCell>Dosage</TableCell>
+                    <TableCell>Handlinger</TableCell>
                   </TableRow>
-                </TableHeader>
+                </TableHead>
                 <TableBody>
                   {vaccinationRecords.map((record) => (
                     <TableRow key={record.sogv_vaksineringid}>
                       <TableCell>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                          <PersonRegular />
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Person />
                           {getPatientName(record.sogv_pasientid)}
-                        </div>
+                        </Box>
                       </TableCell>
                       <TableCell>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                          <ShieldRegular />
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Vaccines />
                           {getVaccineTypeName(record.sogv_vaksinetypeid)}
-                        </div>
+                        </Box>
                       </TableCell>
                       <TableCell>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                          <CalendarRegular />
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <CalendarToday />
                           {formatDate(record.sogv_vaksinasjonsdato)}
-                        </div>
+                        </Box>
                       </TableCell>
                       <TableCell>{record.sogv_lotnummer || 'Ikke oppgitt'}</TableCell>
                       <TableCell>{record.sogv_dosage}</TableCell>
                       <TableCell>
-                        <div className={styles.actionButtons}>
+                        <Box display="flex" gap={1}>
                           <Button
                             size="small"
                             onClick={() => handleRecordSelect(record)}
-                            icon={<DocumentRegular />}
+                            startIcon={<Description />}
                           >
                             Vis detaljer
                           </Button>
                           <Button
                             size="small"
-                            appearance="secondary"
-                            icon={<EditRegular />}
+                            variant="outlined"
+                            startIcon={<Edit />}
                           >
                             Rediger
                           </Button>
-                        </div>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </TableContainer>
           ) : (
-            <div className={styles.emptyState}>
-              <Text size={300}>
+            <Box textAlign="center" py={4}>
+              <Typography variant="body1" color="text.secondary">
                 Ingen vaksinasjonsjournaler funnet.
-              </Text>
-            </div>
+              </Typography>
+            </Box>
           )}
-        </CardPreview>
+        </CardContent>
       </Card>
 
       {/* Create Vaccination Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={(_, data) => setIsCreateOpen(data.open)}>
-        <DialogSurface>
-          <DialogTitle>
-            Registrer ny vaksinasjon
-          </DialogTitle>
-          <DialogBody>
-            <div className={styles.formGrid}>
-              <Field label="Pasient" required>
-                <Combobox
-                  placeholder="Velg pasient..."
+      <Dialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Registrer ny vaksinasjon
+          <IconButton
+            onClick={() => setIsCreateOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Pasient</InputLabel>
+                <Select
                   value={formData.patientId}
-                  onOptionSelect={(_, data) => setFormData(prev => ({ ...prev, patientId: data.optionValue || '' }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, patientId: e.target.value }))}
+                  label="Pasient"
                 >
                   {patients?.map((patient) => (
-                    <Option key={patient.sogv_vaksineinnbyggerid} value={patient.sogv_vaksineinnbyggerid}>
+                    <MenuItem key={patient.sogv_vaksineinnbyggerid} value={patient.sogv_vaksineinnbyggerid}>
                       {patient.sogv_fornavn} {patient.sogv_etternavn} ({patient.sogv_personnummer})
-                    </Option>
+                    </MenuItem>
                   ))}
-                </Combobox>
-              </Field>
+                </Select>
+              </FormControl>
+            </Grid>
 
-              <Field label="Vaksinetype" required>
-                <Combobox
-                  placeholder="Velg vaksinetype..."
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Vaksinetype</InputLabel>
+                <Select
                   value={formData.vaccineTypeId}
-                  onOptionSelect={(_, data) => setFormData(prev => ({ ...prev, vaccineTypeId: data.optionValue || '' }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, vaccineTypeId: e.target.value }))}
+                  label="Vaksinetype"
                 >
                   {vaccineTypes?.map((vaccineType) => (
-                    <Option key={vaccineType.sogv_vaksinetypeid} value={vaccineType.sogv_vaksinetypeid}>
+                    <MenuItem key={vaccineType.sogv_vaksinetypeid} value={vaccineType.sogv_vaksinetypeid}>
                       {vaccineType.sogv_vaksinenavn} - {vaccineType.sogv_sykdom}
-                    </Option>
+                    </MenuItem>
                   ))}
-                </Combobox>
-              </Field>
+                </Select>
+              </FormControl>
+            </Grid>
 
-              <Field label="Vaksinasjonsdato" required>
-                <DatePicker
-                  placeholder="Velg dato..."
-                  value={formData.vaccinationDate ? new Date(formData.vaccinationDate) : undefined}
-                  onSelectDate={(date) => setFormData(prev => ({ 
-                    ...prev, 
-                    vaccinationDate: date ? date.toISOString() : '' 
-                  }))}
-                />
-              </Field>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Vaksinasjonsdato"
+                type="datetime-local"
+                value={formData.vaccinationDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, vaccinationDate: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                required
+              />
+            </Grid>
 
-              <Field label="Lot nummer">
-                <Input
-                  placeholder="Skriv lot nummer..."
-                  value={formData.lotNumber}
-                  onChange={(_, data) => setFormData(prev => ({ ...prev, lotNumber: data.value }))}
-                />
-              </Field>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Lot nummer"
+                placeholder="Skriv lot nummer..."
+                value={formData.lotNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, lotNumber: e.target.value }))}
+              />
+            </Grid>
 
-              <Field label="Dosage" required>
-                <Input
-                  type="number"
-                  placeholder="1"
-                  value={formData.dosage.toString()}
-                  onChange={(_, data) => setFormData(prev => ({ ...prev, dosage: parseInt(data.value) || 1 }))}
-                />
-              </Field>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Dosage"
+                type="number"
+                placeholder="1"
+                value={formData.dosage}
+                onChange={(e) => setFormData(prev => ({ ...prev, dosage: parseInt(e.target.value) || 1 }))}
+                required
+              />
+            </Grid>
 
-              <Field label="Bivirkninger">
-                <Textarea
-                  placeholder="Beskriv eventuelle bivirkninger..."
-                  value={formData.sideEffects}
-                  onChange={(_, data) => setFormData(prev => ({ ...prev, sideEffects: data.value }))}
-                />
-              </Field>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Bivirkninger"
+                multiline
+                rows={3}
+                placeholder="Beskriv eventuelle bivirkninger..."
+                value={formData.sideEffects}
+                onChange={(e) => setFormData(prev => ({ ...prev, sideEffects: e.target.value }))}
+              />
+            </Grid>
 
-              <Field label="Notater">
-                <Textarea
-                  placeholder="Legg til notater..."
-                  value={formData.notes}
-                  onChange={(_, data) => setFormData(prev => ({ ...prev, notes: data.value }))}
-                />
-              </Field>
-            </div>
-          </DialogBody>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Avbryt</Button>
-            </DialogTrigger>
-            <Button 
-              appearance="primary" 
-              onClick={handleCreateVaccination}
-              disabled={createVaccinationMutation.isLoading}
-            >
-              {createVaccinationMutation.isLoading ? 'Registrerer...' : 'Registrer vaksinasjon'}
-            </Button>
-          </DialogActions>
-        </DialogSurface>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notater"
+                multiline
+                rows={3}
+                placeholder="Legg til notater..."
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsCreateOpen(false)}>Avbryt</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleCreateVaccination}
+            disabled={createVaccinationMutation.isLoading}
+          >
+            {createVaccinationMutation.isLoading ? 'Registrerer...' : 'Registrer vaksinasjon'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Vaccination Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={(_, data) => setIsDetailsOpen(data.open)}>
-        <DialogSurface>
-          <DialogTitle>
-            Vaksinasjonsdetaljer
-          </DialogTitle>
-          <DialogBody>
-            {selectedRecord && (
-              <div className={styles.formGrid}>
-                <div>
-                  <Text weight="semibold">Pasient:</Text>
-                  <Text>{getPatientName(selectedRecord.sogv_pasientid)}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Vaksine:</Text>
-                  <Text>{getVaccineTypeName(selectedRecord.sogv_vaksinetypeid)}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Dato:</Text>
-                  <Text>{formatDate(selectedRecord.sogv_vaksinasjonsdato)}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Lot nummer:</Text>
-                  <Text>{selectedRecord.sogv_lotnummer || 'Ikke oppgitt'}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Dosage:</Text>
-                  <Text>{selectedRecord.sogv_dosage}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Bivirkninger:</Text>
-                  <Text>{selectedRecord.sogv_bivirkninger || 'Ingen bivirkninger registrert'}</Text>
-                </div>
-                <div>
-                  <Text weight="semibold">Notater:</Text>
-                  <Text>{selectedRecord.sogv_notater || 'Ingen notater'}</Text>
-                </div>
-              </div>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Lukk</Button>
-            </DialogTrigger>
-            <Button appearance="primary">Rediger</Button>
-          </DialogActions>
-        </DialogSurface>
+      <Dialog open={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Vaksinasjonsdetaljer
+          <IconButton
+            onClick={() => setIsDetailsOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedRecord && (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Pasient:</Typography>
+                <Typography>{getPatientName(selectedRecord.sogv_pasientid)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Vaksine:</Typography>
+                <Typography>{getVaccineTypeName(selectedRecord.sogv_vaksinetypeid)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Dato:</Typography>
+                <Typography>{formatDate(selectedRecord.sogv_vaksinasjonsdato)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Lot nummer:</Typography>
+                <Typography>{selectedRecord.sogv_lotnummer || 'Ikke oppgitt'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Dosage:</Typography>
+                <Typography>{selectedRecord.sogv_dosage}</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">Bivirkninger:</Typography>
+                <Typography>{selectedRecord.sogv_bivirkninger || 'Ingen bivirkninger registrert'}</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">Notater:</Typography>
+                <Typography>{selectedRecord.sogv_notater || 'Ingen notater'}</Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDetailsOpen(false)}>Lukk</Button>
+          <Button variant="contained">Rediger</Button>
+        </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   )
 }
 

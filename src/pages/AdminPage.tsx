@@ -1,45 +1,38 @@
 import React, { useState } from 'react'
 import { 
-  makeStyles,
-  tokens,
-  Text,
+  Typography,
   Card,
-  CardHeader,
-  CardPreview,
+  CardContent,
   Button,
-  Input,
-  Spinner,
+  CircularProgress,
   Table,
-  TableHeader,
-  TableHeaderCell,
   TableBody,
-  TableRow,
   TableCell,
-  Badge,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Box,
+  Grid,
   Dialog,
-  DialogTrigger,
-  DialogSurface,
   DialogTitle,
-  DialogBody,
-  DialogActions,
   DialogContent,
-  Field,
+  DialogActions,
+  IconButton,
   Tabs,
   Tab,
-  TabList,
-  TabValue
-} from '@fluentui/react-components'
+  Chip
+} from '@mui/material'
 import { 
-  PeopleRegular,
-  ShieldRegular,
-  SettingsRegular,
-  AddRegular,
-  EditRegular,
-  DeleteRegular,
-  DocumentRegular,
-  PersonRegular,
-  CalendarRegular
-} from '@fluentui/react-icons'
+  People,
+  Vaccines,
+  Settings,
+  Edit,
+  Description,
+  Person,
+  CalendarToday,
+  Close
+} from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { useAuth } from '../hooks/useAuth'
 import { useUserRoles } from '../hooks/useUserRoles'
@@ -48,84 +41,38 @@ import { Patient, VaccinationRecord, VaccineType, HealthcareProvider } from '../
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
 
-const useStyles = makeStyles({
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: tokens.spacingVerticalL,
-  },
-  header: {
-    marginBottom: tokens.spacingVerticalXXL,
-  },
-  title: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorBrandForeground1,
-    marginBottom: tokens.spacingVerticalS,
-  },
-  subtitle: {
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
-  },
-  tabsContainer: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  tabContent: {
-    marginTop: tokens.spacingVerticalL,
-  },
-  actionCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  dataCard: {
-    marginBottom: tokens.spacingVerticalL,
-  },
-  tableContainer: {
-    overflowX: 'auto',
-  },
-  actionButtons: {
-    display: 'flex',
-    gap: tokens.spacingHorizontalS,
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '200px',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: tokens.spacingVerticalXXL,
-    color: tokens.colorNeutralForeground2,
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: tokens.spacingVerticalL,
-    marginBottom: tokens.spacingVerticalL,
-  },
-  statCard: {
-    padding: tokens.spacingVerticalL,
-    textAlign: 'center',
-  },
-  statNumber: {
-    fontSize: tokens.fontSizeHero800,
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorBrandForeground1,
-    marginBottom: tokens.spacingVerticalXS,
-  },
-  statLabel: {
-    fontSize: tokens.fontSizeBase200,
-    color: tokens.colorNeutralForeground2,
-  },
-})
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`admin-tabpanel-${index}`}
+      aria-labelledby={`admin-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  )
+}
 
 const AdminPage: React.FC = () => {
-  const styles = useStyles()
   const { user } = useAuth()
   const { roles } = useUserRoles()
   const queryClient = useQueryClient()
   
-  const [selectedTab, setSelectedTab] = useState<TabValue>('overview')
+  const [selectedTab, setSelectedTab] = useState(0)
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
@@ -167,454 +114,442 @@ const AdminPage: React.FC = () => {
 
   if (!roles.includes('Admin')) {
     return (
-      <div className={styles.container}>
-        <div className={styles.emptyState}>
-          <Text size={300}>
+      <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: 3 }}>
+        <Box textAlign="center" py={4}>
+          <Typography variant="body1" color="text.secondary">
             Du har ikke tilgang til administrasjon.
-          </Text>
-        </div>
-      </div>
+          </Typography>
+        </Box>
+      </Box>
     )
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Text className={styles.title}>
+    <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom color="primary">
           Systemadministrasjon
-        </Text>
-        <Text className={styles.subtitle}>
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
           Administrer brukere, data og systeminnstillinger
-        </Text>
-      </div>
+        </Typography>
+      </Box>
 
-      <div className={styles.tabsContainer}>
-        <Tabs value={selectedTab} onValueChange={(_, data) => setSelectedTab(data.value)}>
-          <TabList>
-            <Tab value="overview">Oversikt</Tab>
-            <Tab value="patients">Pasienter</Tab>
-            <Tab value="vaccinations">Vaksinasjoner</Tab>
-            <Tab value="vaccines">Vaksinetyper</Tab>
-            <Tab value="providers">Helsepersonell</Tab>
-            <Tab value="settings">Innstillinger</Tab>
-          </TabList>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={selectedTab} onChange={(_, newValue) => setSelectedTab(newValue)}>
+          <Tab label="Oversikt" />
+          <Tab label="Pasienter" />
+          <Tab label="Vaksinasjoner" />
+          <Tab label="Vaksinetyper" />
+          <Tab label="Helsepersonell" />
+          <Tab label="Innstillinger" />
         </Tabs>
-      </div>
+      </Box>
 
-      <div className={styles.tabContent}>
-        {selectedTab === 'overview' && (
-          <>
-            <div className={styles.statsGrid}>
-              <Card className={styles.statCard}>
-                <CardPreview>
-                  <Text className={styles.statNumber}>
-                    {patients?.length || 0}
-                  </Text>
-                  <Text className={styles.statLabel}>
-                    Registrerte pasienter
-                  </Text>
-                </CardPreview>
-              </Card>
-
-              <Card className={styles.statCard}>
-                <CardPreview>
-                  <Text className={styles.statNumber}>
-                    {vaccinationRecords?.length || 0}
-                  </Text>
-                  <Text className={styles.statLabel}>
-                    Utførte vaksinasjoner
-                  </Text>
-                </CardPreview>
-              </Card>
-
-              <Card className={styles.statCard}>
-                <CardPreview>
-                  <Text className={styles.statNumber}>
-                    {vaccineTypes?.length || 0}
-                  </Text>
-                  <Text className={styles.statLabel}>
-                    Tilgjengelige vaksinetyper
-                  </Text>
-                </CardPreview>
-              </Card>
-
-              <Card className={styles.statCard}>
-                <CardPreview>
-                  <Text className={styles.statNumber}>
-                    {healthcareProviders?.length || 0}
-                  </Text>
-                  <Text className={styles.statLabel}>
-                    Registrerte helsepersonell
-                  </Text>
-                </CardPreview>
-              </Card>
-            </div>
-
-            <Card className={styles.dataCard}>
-              <CardHeader>
-                <Text size={400} weight="semibold">
-                  Siste aktivitet
-                </Text>
-              </CardHeader>
-              <CardPreview>
-                <Text size={200} style={{ color: tokens.colorNeutralForeground2 }}>
-                  Her vil du se siste systemaktivitet og viktige hendelser.
-                </Text>
-              </CardPreview>
+      <TabPanel value={selectedTab} index={0}>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="h3" component="div" color="primary" gutterBottom>
+                  {patients?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Registrerte pasienter
+                </Typography>
+              </CardContent>
             </Card>
-          </>
-        )}
+          </Grid>
 
-        {selectedTab === 'patients' && (
-          <Card className={styles.dataCard}>
-            <CardHeader>
-              <Text size={400} weight="semibold">
-                Pasientadministrasjon
-              </Text>
-            </CardHeader>
-            <CardPreview>
-              {patientsLoading ? (
-                <div className={styles.loadingContainer}>
-                  <Spinner size="large" label="Laster pasienter..." />
-                </div>
-              ) : patients && patients.length > 0 ? (
-                <div className={styles.tableContainer}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHeaderCell>Navn</TableHeaderCell>
-                        <TableHeaderCell>Personnummer</TableHeaderCell>
-                        <TableHeaderCell>Fødselsdato</TableHeaderCell>
-                        <TableHeaderCell>Registrert</TableHeaderCell>
-                        <TableHeaderCell>Handlinger</TableHeaderCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {patients.map((patient) => (
-                        <TableRow key={patient.sogv_vaksineinnbyggerid}>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <PersonRegular />
-                              {patient.sogv_fornavn} {patient.sogv_etternavn}
-                            </div>
-                          </TableCell>
-                          <TableCell>{patient.sogv_personnummer}</TableCell>
-                          <TableCell>{formatDate(patient.sogv_fodselsdato)}</TableCell>
-                          <TableCell>{formatDate(patient.sogv_createdon)}</TableCell>
-                          <TableCell>
-                            <div className={styles.actionButtons}>
-                              <Button
-                                size="small"
-                                onClick={() => handleItemSelect(patient)}
-                                icon={<DocumentRegular />}
-                              >
-                                Vis
-                              </Button>
-                              <Button
-                                size="small"
-                                appearance="secondary"
-                                icon={<EditRegular />}
-                              >
-                                Rediger
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Text size={300}>
-                    Ingen pasienter funnet.
-                  </Text>
-                </div>
-              )}
-            </CardPreview>
-          </Card>
-        )}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="h3" component="div" color="primary" gutterBottom>
+                  {vaccinationRecords?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Utførte vaksinasjoner
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {selectedTab === 'vaccinations' && (
-          <Card className={styles.dataCard}>
-            <CardHeader>
-              <Text size={400} weight="semibold">
-                Vaksinasjonsadministrasjon
-              </Text>
-            </CardHeader>
-            <CardPreview>
-              {recordsLoading ? (
-                <div className={styles.loadingContainer}>
-                  <Spinner size="large" label="Laster vaksinasjoner..." />
-                </div>
-              ) : vaccinationRecords && vaccinationRecords.length > 0 ? (
-                <div className={styles.tableContainer}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHeaderCell>Pasient</TableHeaderCell>
-                        <TableHeaderCell>Vaksine</TableHeaderCell>
-                        <TableHeaderCell>Dato</TableHeaderCell>
-                        <TableHeaderCell>Lot nummer</TableHeaderCell>
-                        <TableHeaderCell>Handlinger</TableHeaderCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vaccinationRecords.map((record) => (
-                        <TableRow key={record.sogv_vaksineringid}>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <PersonRegular />
-                              {record.sogv_pasientid}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <ShieldRegular />
-                              {record.sogv_vaksinetypeid}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <CalendarRegular />
-                              {formatDate(record.sogv_vaksinasjonsdato)}
-                            </div>
-                          </TableCell>
-                          <TableCell>{record.sogv_lotnummer || 'Ikke oppgitt'}</TableCell>
-                          <TableCell>
-                            <div className={styles.actionButtons}>
-                              <Button
-                                size="small"
-                                onClick={() => handleItemSelect(record)}
-                                icon={<DocumentRegular />}
-                              >
-                                Vis
-                              </Button>
-                              <Button
-                                size="small"
-                                appearance="secondary"
-                                icon={<EditRegular />}
-                              >
-                                Rediger
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Text size={300}>
-                    Ingen vaksinasjoner funnet.
-                  </Text>
-                </div>
-              )}
-            </CardPreview>
-          </Card>
-        )}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="h3" component="div" color="primary" gutterBottom>
+                  {vaccineTypes?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tilgjengelige vaksinetyper
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {selectedTab === 'vaccines' && (
-          <Card className={styles.dataCard}>
-            <CardHeader>
-              <Text size={400} weight="semibold">
-                Vaksinetyper
-              </Text>
-            </CardHeader>
-            <CardPreview>
-              {vaccineTypesLoading ? (
-                <div className={styles.loadingContainer}>
-                  <Spinner size="large" label="Laster vaksinetyper..." />
-                </div>
-              ) : vaccineTypes && vaccineTypes.length > 0 ? (
-                <div className={styles.tableContainer}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHeaderCell>Navn</TableHeaderCell>
-                        <TableHeaderCell>Produsent</TableHeaderCell>
-                        <TableHeaderCell>Sykdom</TableHeaderCell>
-                        <TableHeaderCell>Status</TableHeaderCell>
-                        <TableHeaderCell>Handlinger</TableHeaderCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vaccineTypes.map((vaccineType) => (
-                        <TableRow key={vaccineType.sogv_vaksinetypeid}>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <ShieldRegular />
-                              {vaccineType.sogv_vaksinenavn}
-                            </div>
-                          </TableCell>
-                          <TableCell>{vaccineType.sogv_produsent}</TableCell>
-                          <TableCell>{vaccineType.sogv_sykdom}</TableCell>
-                          <TableCell>
-                            <Badge
-                              appearance="filled"
-                              color={vaccineType.sogv_aktiv ? 'success' : 'neutral'}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="h3" component="div" color="primary" gutterBottom>
+                  {healthcareProviders?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Registrerte helsepersonell
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Siste aktivitet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Her vil du se siste systemaktivitet og viktige hendelser.
+            </Typography>
+          </CardContent>
+        </Card>
+      </TabPanel>
+
+      <TabPanel value={selectedTab} index={1}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Pasientadministrasjon
+            </Typography>
+            {patientsLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                <CircularProgress size={60} />
+              </Box>
+            ) : patients && patients.length > 0 ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Navn</TableCell>
+                      <TableCell>Personnummer</TableCell>
+                      <TableCell>Fødselsdato</TableCell>
+                      <TableCell>Registrert</TableCell>
+                      <TableCell>Handlinger</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {patients.map((patient) => (
+                      <TableRow key={patient.sogv_vaksineinnbyggerid}>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Person />
+                            {patient.sogv_fornavn} {patient.sogv_etternavn}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{patient.sogv_personnummer}</TableCell>
+                        <TableCell>{formatDate(patient.sogv_fodselsdato)}</TableCell>
+                        <TableCell>{formatDate(patient.sogv_createdon)}</TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1}>
+                            <Button
+                              size="small"
+                              onClick={() => handleItemSelect(patient)}
+                              startIcon={<Description />}
                             >
-                              {vaccineType.sogv_aktiv ? 'Aktiv' : 'Inaktiv'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className={styles.actionButtons}>
-                              <Button
-                                size="small"
-                                onClick={() => handleItemSelect(vaccineType)}
-                                icon={<DocumentRegular />}
-                              >
-                                Vis
-                              </Button>
-                              <Button
-                                size="small"
-                                appearance="secondary"
-                                icon={<EditRegular />}
-                              >
-                                Rediger
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Text size={300}>
-                    Ingen vaksinetyper funnet.
-                  </Text>
-                </div>
-              )}
-            </CardPreview>
-          </Card>
-        )}
-
-        {selectedTab === 'providers' && (
-          <Card className={styles.dataCard}>
-            <CardHeader>
-              <Text size={400} weight="semibold">
-                Helsepersonell
-              </Text>
-            </CardHeader>
-            <CardPreview>
-              {providersLoading ? (
-                <div className={styles.loadingContainer}>
-                  <Spinner size="large" label="Laster helsepersonell..." />
-                </div>
-              ) : healthcareProviders && healthcareProviders.length > 0 ? (
-                <div className={styles.tableContainer}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHeaderCell>Navn</TableHeaderCell>
-                        <TableHeaderCell>Type</TableHeaderCell>
-                        <TableHeaderCell>Autorisasjon</TableHeaderCell>
-                        <TableHeaderCell>Status</TableHeaderCell>
-                        <TableHeaderCell>Handlinger</TableHeaderCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {healthcareProviders.map((provider) => (
-                        <TableRow key={provider.sogv_helsepersonellid}>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS }}>
-                              <PersonRegular />
-                              {provider.sogv_navn}
-                            </div>
-                          </TableCell>
-                          <TableCell>{provider.sogv_type}</TableCell>
-                          <TableCell>{provider.sogv_autorisasjonsnummer}</TableCell>
-                          <TableCell>
-                            <Badge
-                              appearance="filled"
-                              color={provider.sogv_aktiv ? 'success' : 'neutral'}
+                              Vis
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Edit />}
                             >
-                              {provider.sogv_aktiv ? 'Aktiv' : 'Inaktiv'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className={styles.actionButtons}>
-                              <Button
-                                size="small"
-                                onClick={() => handleItemSelect(provider)}
-                                icon={<DocumentRegular />}
-                              >
-                                Vis
-                              </Button>
-                              <Button
-                                size="small"
-                                appearance="secondary"
-                                icon={<EditRegular />}
-                              >
-                                Rediger
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Text size={300}>
-                    Ingen helsepersonell funnet.
-                  </Text>
-                </div>
-              )}
-            </CardPreview>
-          </Card>
-        )}
+                              Rediger
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box textAlign="center" py={4}>
+                <Typography variant="body1" color="text.secondary">
+                  Ingen pasienter funnet.
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </TabPanel>
 
-        {selectedTab === 'settings' && (
-          <Card className={styles.dataCard}>
-            <CardHeader>
-              <Text size={400} weight="semibold">
-                Systeminnstillinger
-              </Text>
-            </CardHeader>
-            <CardPreview>
-              <Text size={200} style={{ color: tokens.colorNeutralForeground2 }}>
-                Her kan du konfigurere systeminnstillinger, sikkerhet og integrasjoner.
-              </Text>
-              <div style={{ marginTop: tokens.spacingVerticalM }}>
-                <Button appearance="primary" icon={<SettingsRegular />}>
-                  Konfigurer innstillinger
-                </Button>
-              </div>
-            </CardPreview>
-          </Card>
-        )}
-      </div>
+      <TabPanel value={selectedTab} index={2}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Vaksinasjonsadministrasjon
+            </Typography>
+            {recordsLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                <CircularProgress size={60} />
+              </Box>
+            ) : vaccinationRecords && vaccinationRecords.length > 0 ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Pasient</TableCell>
+                      <TableCell>Vaksine</TableCell>
+                      <TableCell>Dato</TableCell>
+                      <TableCell>Lot nummer</TableCell>
+                      <TableCell>Handlinger</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {vaccinationRecords.map((record) => (
+                      <TableRow key={record.sogv_vaksineringid}>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Person />
+                            {record.sogv_pasientid}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Vaccines />
+                            {record.sogv_vaksinetypeid}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <CalendarToday />
+                            {formatDate(record.sogv_vaksinasjonsdato)}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{record.sogv_lotnummer || 'Ikke oppgitt'}</TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1}>
+                            <Button
+                              size="small"
+                              onClick={() => handleItemSelect(record)}
+                              startIcon={<Description />}
+                            >
+                              Vis
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Edit />}
+                            >
+                              Rediger
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box textAlign="center" py={4}>
+                <Typography variant="body1" color="text.secondary">
+                  Ingen vaksinasjoner funnet.
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </TabPanel>
+
+      <TabPanel value={selectedTab} index={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Vaksinetyper
+            </Typography>
+            {vaccineTypesLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                <CircularProgress size={60} />
+              </Box>
+            ) : vaccineTypes && vaccineTypes.length > 0 ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Navn</TableCell>
+                      <TableCell>Produsent</TableCell>
+                      <TableCell>Sykdom</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Handlinger</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {vaccineTypes.map((vaccineType) => (
+                      <TableRow key={vaccineType.sogv_vaksinetypeid}>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Vaccines />
+                            {vaccineType.sogv_vaksinenavn}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{vaccineType.sogv_produsent}</TableCell>
+                        <TableCell>{vaccineType.sogv_sykdom}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={vaccineType.sogv_aktiv ? 'Aktiv' : 'Inaktiv'}
+                            color={vaccineType.sogv_aktiv ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1}>
+                            <Button
+                              size="small"
+                              onClick={() => handleItemSelect(vaccineType)}
+                              startIcon={<Description />}
+                            >
+                              Vis
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Edit />}
+                            >
+                              Rediger
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box textAlign="center" py={4}>
+                <Typography variant="body1" color="text.secondary">
+                  Ingen vaksinetyper funnet.
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </TabPanel>
+
+      <TabPanel value={selectedTab} index={4}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Helsepersonell
+            </Typography>
+            {providersLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                <CircularProgress size={60} />
+              </Box>
+            ) : healthcareProviders && healthcareProviders.length > 0 ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Navn</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Autorisasjon</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Handlinger</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {healthcareProviders.map((provider) => (
+                      <TableRow key={provider.sogv_helsepersonellid}>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Person />
+                            {provider.sogv_navn}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{provider.sogv_type}</TableCell>
+                        <TableCell>{provider.sogv_autorisasjonsnummer}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={provider.sogv_aktiv ? 'Aktiv' : 'Inaktiv'}
+                            color={provider.sogv_aktiv ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1}>
+                            <Button
+                              size="small"
+                              onClick={() => handleItemSelect(provider)}
+                              startIcon={<Description />}
+                            >
+                              Vis
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Edit />}
+                            >
+                              Rediger
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box textAlign="center" py={4}>
+                <Typography variant="body1" color="text.secondary">
+                  Ingen helsepersonell funnet.
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </TabPanel>
+
+      <TabPanel value={selectedTab} index={5}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Systeminnstillinger
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Her kan du konfigurere systeminnstillinger, sikkerhet og integrasjoner.
+            </Typography>
+            <Button variant="contained" startIcon={<Settings />}>
+              Konfigurer innstillinger
+            </Button>
+          </CardContent>
+        </Card>
+      </TabPanel>
 
       {/* Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={(_, data) => setIsDetailsOpen(data.open)}>
-        <DialogSurface>
-          <DialogTitle>
-            Detaljer
-          </DialogTitle>
-          <DialogBody>
-            {selectedItem && (
-              <div>
-                <Text>Detaljert informasjon om valgt element vil vises her.</Text>
-                <pre style={{ marginTop: tokens.spacingVerticalM, fontSize: tokens.fontSizeBase200 }}>
-                  {JSON.stringify(selectedItem, null, 2)}
-                </pre>
-              </div>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Lukk</Button>
-            </DialogTrigger>
-            <Button appearance="primary">Rediger</Button>
-          </DialogActions>
-        </DialogSurface>
+      <Dialog open={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Detaljer
+          <IconButton
+            onClick={() => setIsDetailsOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedItem && (
+            <Box>
+              <Typography>Detaljert informasjon om valgt element vil vises her.</Typography>
+              <Box component="pre" sx={{ mt: 2, fontSize: '0.875rem', overflow: 'auto' }}>
+                {JSON.stringify(selectedItem, null, 2)}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDetailsOpen(false)}>Lukk</Button>
+          <Button variant="contained">Rediger</Button>
+        </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   )
 }
 
