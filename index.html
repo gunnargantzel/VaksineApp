@@ -11,7 +11,7 @@
       // Load MSAL with fallback
       function loadMSAL() {
         const script = document.createElement('script');
-        script.src = 'https://alcdn.msauth.net/browser/2.22.0/js/msal-browser.min.js';
+        script.src = 'https://alcdn.msauth.net/browser/2.20.0/js/msal-browser.min.js';
         script.onload = function() {
           console.log('MSAL loaded successfully');
           console.log('MSAL available:', typeof window.msal);
@@ -23,7 +23,7 @@
           console.error('Failed to load MSAL from primary CDN, trying fallback...');
           // Try fallback CDN
           const fallbackScript = document.createElement('script');
-          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.22.0/dist/msal-browser.min.js';
+          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.20.0/dist/msal-browser.min.js';
           fallbackScript.onload = function() {
             console.log('MSAL loaded from fallback CDN');
           };
@@ -60,6 +60,48 @@
       if (typeof require === 'undefined') {
         window.require = () => {};
       }
+      
+      // Create a custom fetch wrapper to prevent MSAL fetch.js errors
+      console.log('Creating custom fetch wrapper...');
+      
+      // Store original fetch if it exists
+      const originalFetch = window.fetch;
+      
+      // Create a custom fetch that handles Request properly
+      window.fetch = function(input, init) {
+        try {
+          // Ensure Request is properly defined
+          if (typeof Request === 'undefined') {
+            console.log('Request not available, using fallback...');
+            // Simple fallback for Request
+            if (typeof input === 'string') {
+              return originalFetch ? originalFetch(input, init) : Promise.reject(new Error('No fetch available'));
+            }
+          }
+          
+          // Use original fetch if available
+          if (originalFetch) {
+            return originalFetch(input, init);
+          }
+          
+          // Fallback to XMLHttpRequest if no fetch
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(init?.method || 'GET', input);
+            xhr.onload = () => resolve({
+              ok: xhr.status >= 200 && xhr.status < 300,
+              status: xhr.status,
+              text: () => Promise.resolve(xhr.responseText),
+              json: () => Promise.resolve(JSON.parse(xhr.responseText))
+            });
+            xhr.onerror = () => reject(new Error('Network error'));
+            xhr.send(init?.body);
+          });
+        } catch (error) {
+          console.error('Custom fetch error:', error);
+          return Promise.reject(error);
+        }
+      };
       
       // Load fetch polyfill first, before MSAL
       console.log('Loading fetch polyfill...');
