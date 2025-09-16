@@ -14,29 +14,77 @@ let msalInstance: any = null;
 // Initialize MSAL with error handling
 const initializeMsal = async () => {
   try {
-    // Check if MSAL is available
-    if (typeof window.msal === 'undefined') {
-      console.error('MSAL library not loaded from CDN');
-      return;
-    }
+    console.log('AuthManager: Starting initialization...');
     
-    console.log('MSAL library is available from CDN');
+    // Check if MSAL is available (like in auth.js)
+    if (typeof (window as any).msal === 'undefined') {
+      console.error('MSAL library not loaded');
+      throw new Error('MSAL library not loaded');
+    }
+    console.log('MSAL library is available');
+    
+    // Additional check for MSAL object
+    if (!(window as any).msal.PublicClientApplication) {
+      console.error('MSAL PublicClientApplication not available');
+      throw new Error('MSAL PublicClientApplication not available');
+    }
+    console.log('MSAL PublicClientApplication is available');
     
     // Create MSAL instance
-    msalInstance = new window.msal.PublicClientApplication(msalConfig);
+    console.log('Creating MSAL instance...');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    console.log('iOS detected:', isIOS);
+    
+    msalInstance = new (window as any).msal.PublicClientApplication({
+      auth: {
+        ...msalConfig.auth,
+        navigateToLoginRequestUrl: false
+      },
+      cache: {
+        cacheLocation: isIOS ? 'sessionStorage' : 'localStorage',
+        storeAuthStateInCookie: isIOS ? true : false
+      },
+      system: {
+        loggerOptions: {
+          loggerCallback: (level: number, message: string, containsPii: boolean) => {
+            if (containsPii) return;
+            console.log(`[MSAL ${level}]: ${message}`);
+          },
+          piiLoggingEnabled: false,
+          logLevel: 2 // Info level
+        }
+      }
+    });
+    console.log('MSAL instance created');
     
     // Set global instance for use in hooks
     (window as any).msalInstance = msalInstance;
     
+    // Add event callback for token/account events
+    msalInstance.addEventCallback((event: any) => {
+      if (event.eventType === (window as any).msal.EventType.LOGIN_SUCCESS && event.payload?.account) {
+        msalInstance.setActiveAccount(event.payload.account);
+      }
+      if (event.eventType === (window as any).msal.EventType.ACQUIRE_TOKEN_SUCCESS && event.payload?.account) {
+        msalInstance.setActiveAccount(event.payload.account);
+      }
+    });
+
     // Handle redirect promise
+    console.log('Handling redirect promise...');
     const response = await msalInstance.handleRedirectPromise();
+    console.log('Redirect promise handled');
     
     if (response?.account) {
+      console.log('Redirect response received:', response);
+      console.log('Redirect response account:', response.account);
       msalInstance.setActiveAccount(response.account);
       console.log('Login successful via redirect:', response.account.username);
     } else {
       // Check if user is already logged in
+      console.log('Checking for existing accounts...');
       const accounts = msalInstance.getAllAccounts();
+      console.log('Found accounts:', accounts.length);
       if (accounts.length > 0) {
         msalInstance.setActiveAccount(accounts[0]);
         console.log('User already logged in:', accounts[0].username);

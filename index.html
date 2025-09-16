@@ -6,8 +6,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VaksineApp - Vaksinasjonsadministrasjon</title>
     <meta name="description" content="Moderne vaksinasjonsadministrasjonssystem med Entra ID og DataVerse" />
-    <!-- MSAL.js CDN -->
-    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    <!-- MSAL.js CDN with fallback -->
+    <script>
+      // Load MSAL with fallback
+      function loadMSAL() {
+        const script = document.createElement('script');
+        script.src = 'https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js';
+        script.onload = function() {
+          console.log('MSAL loaded successfully');
+          console.log('MSAL available:', typeof window.msal);
+          if (window.msal) {
+            console.log('MSAL PublicClientApplication available:', !!window.msal.PublicClientApplication);
+          }
+        };
+        script.onerror = function() {
+          console.error('Failed to load MSAL from primary CDN, trying fallback...');
+          // Try fallback CDN
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.38.2/dist/msal-browser.min.js';
+          fallbackScript.onload = function() {
+            console.log('MSAL loaded from fallback CDN');
+          };
+          fallbackScript.onerror = function() {
+            console.error('Failed to load MSAL from both CDNs');
+          };
+          document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(script);
+      }
+      
+      // Load MSAL when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadMSAL);
+      } else {
+        loadMSAL();
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
