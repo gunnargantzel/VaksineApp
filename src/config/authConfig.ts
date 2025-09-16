@@ -37,6 +37,10 @@ export const msalConfig: Configuration = {
     // Fix for browser compatibility
     allowNativeBroker: false,
     allowRedirectInIframe: false,
+    // Disable problematic features
+    iframeHashTimeout: 6000,
+    loadFrameTimeout: 0,
+    asyncPopups: false,
   },
 }
 
