@@ -1,21 +1,41 @@
-import { useMsal } from '@azure/msal-react'
 import { useQuery } from 'react-query'
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { User, AuthState } from '../types'
 import { graphConfig } from '../config/authConfig'
-import { msalInstance } from '../services/authService'
+
+// Global MSAL instance
+let globalMsalInstance: any = null;
 
 export const useAuth = () => {
-  const { accounts, instance } = useMsal()
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    // Get MSAL instance from global scope
+    const checkMsalInstance = () => {
+      const existingInstance = (window as any).msalInstance;
+      if (existingInstance) {
+        globalMsalInstance = existingInstance;
+        const currentAccounts = globalMsalInstance.getAllAccounts();
+        setAccounts(currentAccounts);
+        setIsInitialized(true);
+      } else {
+        // Retry after a short delay
+        setTimeout(checkMsalInstance, 100);
+      }
+    };
+
+    checkMsalInstance();
+  }, []);
 
   const { data: user, isLoading, error } = useQuery<User | null>(
     ['user', accounts[0]?.localAccountId],
     async () => {
-      if (!accounts[0]) return null
+      if (!accounts[0] || !globalMsalInstance) return null
 
       try {
         // Get user info from Microsoft Graph
-        const response = await instance.acquireTokenSilent({
+        const response = await globalMsalInstance.acquireTokenSilent({
           scopes: ['User.Read'],
           account: accounts[0],
         })
@@ -47,7 +67,7 @@ export const useAuth = () => {
       }
     },
     {
-      enabled: !!accounts[0],
+      enabled: !!accounts[0] && isInitialized,
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
     }
@@ -56,9 +76,9 @@ export const useAuth = () => {
   const authState: AuthState = useMemo(() => ({
     isAuthenticated: !!user,
     user,
-    loading: isLoading,
+    loading: isLoading || !isInitialized,
     error: error?.message || null,
-  }), [user, isLoading, error])
+  }), [user, isLoading, error, isInitialized])
 
   return authState
 }

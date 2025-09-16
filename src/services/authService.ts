@@ -1,24 +1,39 @@
-import { PublicClientApplication, Configuration } from '@azure/msal-browser'
-import { msalConfig } from '../config/authConfig'
+import { CONFIG } from '../config/authConfig'
 
-// Create MSAL instance
-export const msalInstance = new PublicClientApplication(msalConfig)
-
-// Initialize MSAL
-export const initializeMsal = async () => {
-  await msalInstance.initialize()
+// Get MSAL instance from global scope
+const getMsalInstance = () => {
+  return (window as any).msalInstance;
 }
 
 // Login function
 export const login = async () => {
   try {
+    const msalInstance = getMsalInstance();
+    if (!msalInstance) {
+      throw new Error('MSAL instance not available');
+    }
+
     const loginRequest = {
-      scopes: ['User.Read', 'User.ReadBasic.All', 'GroupMember.Read.All'],
+      scopes: CONFIG.auth.scopes,
       prompt: 'select_account',
     }
 
-    const response = await msalInstance.loginPopup(loginRequest)
-    return response
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isIOS) {
+      console.log('iOS device detected, using loginRedirect');
+      return msalInstance.loginRedirect(loginRequest);
+    }
+    
+    // Desktop/Android:
+    try {
+      const resp = await msalInstance.loginPopup(loginRequest);
+      msalInstance.setActiveAccount(resp.account);
+      return resp;
+    } catch {
+      console.log('Popup failed, trying redirect as fallback');
+      return msalInstance.loginRedirect(loginRequest);
+    }
   } catch (error) {
     console.error('Login failed:', error)
     throw error
@@ -28,9 +43,21 @@ export const login = async () => {
 // Logout function
 export const logout = async () => {
   try {
-    await msalInstance.logoutPopup({
-      postLogoutRedirectUri: window.location.origin,
-    })
+    const msalInstance = getMsalInstance();
+    if (!msalInstance) {
+      throw new Error('MSAL instance not available');
+    }
+
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const logoutRequest = {
+      postLogoutRedirectUri: CONFIG.auth.postLogoutRedirectUri
+    };
+
+    if (isIOS) {
+      await msalInstance.logoutRedirect(logoutRequest);
+    } else {
+      await msalInstance.logoutPopup(logoutRequest);
+    }
   } catch (error) {
     console.error('Logout failed:', error)
     throw error
@@ -40,6 +67,11 @@ export const logout = async () => {
 // Get access token
 export const getAccessToken = async (scopes: string[]) => {
   try {
+    const msalInstance = getMsalInstance();
+    if (!msalInstance) {
+      throw new Error('MSAL instance not available');
+    }
+
     const accounts = msalInstance.getAllAccounts()
     if (accounts.length === 0) {
       throw new Error('No accounts found')
@@ -59,12 +91,18 @@ export const getAccessToken = async (scopes: string[]) => {
 
 // Check if user is authenticated
 export const isAuthenticated = () => {
+  const msalInstance = getMsalInstance();
+  if (!msalInstance) return false;
+  
   const accounts = msalInstance.getAllAccounts()
   return accounts.length > 0
 }
 
 // Get current user account
 export const getCurrentAccount = () => {
+  const msalInstance = getMsalInstance();
+  if (!msalInstance) return null;
+  
   const accounts = msalInstance.getAllAccounts()
   return accounts.length > 0 ? accounts[0] : null
 }

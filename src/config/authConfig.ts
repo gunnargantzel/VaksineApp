@@ -1,64 +1,64 @@
-import { Configuration, PopupRequest } from '@azure/msal-browser'
+// Azure AD Configuration - using global MSAL from CDN
+declare global {
+  interface Window {
+    msal: any;
+  }
+}
 
-// Azure AD B2C Configuration
-export const msalConfig: Configuration = {
+// Configuration object
+export const CONFIG = {
   auth: {
     clientId: import.meta.env.VITE_AZURE_CLIENT_ID || 'your-client-id',
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID || 'your-tenant-id'}`,
     redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     postLogoutRedirectUri: import.meta.env.VITE_POST_LOGOUT_REDIRECT_URI || window.location.origin,
+    scopes: ["User.Read", "profile", "email", "openid", "User.ReadBasic.All", "GroupMember.Read.All"]
+  },
+  messages: {
+    success: {
+      loginSuccess: "Innlogging vellykket!",
+      logoutSuccess: "Utlogging vellykket!"
+    },
+    errors: {
+      authError: "Feil ved autentisering. Vennligst prøv igjen.",
+      networkError: "Nettverksfeil. Sjekk internettforbindelsen."
+    }
+  }
+};
+
+// MSAL Configuration
+export const msalConfig = {
+  auth: {
+    ...CONFIG.auth,
+    navigateToLoginRequestUrl: false
   },
   cache: {
-    cacheLocation: 'sessionStorage', // This configures where your cache will be stored
-    storeAuthStateInCookie: false, // Set this to "true" if you are having issues on IE11 or Edge
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false
   },
   system: {
     loggerOptions: {
-      loggerCallback: (level, message, containsPii) => {
-        if (containsPii) {
-          return
-        }
-        switch (level) {
-          case 0: // LogLevel.Error
-            console.error(message)
-            return
-          case 1: // LogLevel.Warning
-            console.warn(message)
-            return
-          case 2: // LogLevel.Info
-            console.info(message)
-            return
-          case 3: // LogLevel.Verbose
-            console.debug(message)
-            return
-        }
+      loggerCallback: (level: number, message: string, containsPii: boolean) => {
+        if (containsPii) return;
+        console.log(`[MSAL ${level}]: ${message}`);
       },
-    },
-    // Fix for browser compatibility
-    allowNativeBroker: false,
-    allowRedirectInIframe: false,
-    // Disable problematic features
-    iframeHashTimeout: 6000,
-    loadFrameTimeout: 0,
-    asyncPopups: false,
-  },
-}
+      piiLoggingEnabled: false,
+      logLevel: 2 // Info level
+    }
+  }
+};
 
-// Add scopes here for ID token to be used at Microsoft identity platform endpoints.
-export const loginRequest: PopupRequest = {
-  scopes: [
-    'User.Read',
-    'User.ReadBasic.All',
-    'GroupMember.Read.All',
-  ],
-  prompt: 'select_account',
-}
+// Login request configuration
+export const loginRequest = {
+  scopes: CONFIG.auth.scopes,
+  prompt: 'select_account'
+};
 
-// Add the endpoints here for Microsoft Graph API services you'd like to use.
+// Graph API endpoints
 export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
   graphGroupsEndpoint: 'https://graph.microsoft.com/v1.0/me/memberOf',
-}
+};
 
 // Environment variables for different environments
 export const environmentConfig = {

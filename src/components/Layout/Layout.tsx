@@ -21,7 +21,6 @@ import {
   Logout
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useMsal } from '@azure/msal-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useUserRoles } from '../../hooks/useUserRoles'
 import { logout } from '../../services/authService'
@@ -33,7 +32,6 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { instance, accounts } = useMsal()
   const { user } = useAuth()
   const { roles, loading: rolesLoading } = useUserRoles()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)

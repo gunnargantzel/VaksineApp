@@ -1,6 +1,5 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useMsal } from '@azure/msal-react'
 import { CircularProgress, Box } from '@mui/material'
 import Layout from './components/Layout/Layout'
 import LoginPage from './pages/LoginPage'
@@ -13,7 +12,6 @@ import { useUserRoles } from './hooks/useUserRoles'
 import './App.css'
 
 function App() {
-  const { instance, accounts } = useMsal()
   const { user, loading: authLoading } = useAuth()
   const { roles, loading: rolesLoading } = useUserRoles()
 
@@ -32,7 +30,7 @@ function App() {
   }
 
   // If not authenticated, show login page
-  if (!user || accounts.length === 0) {
+  if (!user) {
     return <LoginPage />
   }
 

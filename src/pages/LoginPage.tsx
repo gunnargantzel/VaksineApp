@@ -19,21 +19,11 @@ import {
   Description,
   CheckCircle
 } from '@mui/icons-material'
-import { useMsal } from '@azure/msal-react'
 import { login } from '../services/authService'
 
 const LoginPage: React.FC = () => {
-  const { instance, accounts, inProgress } = useMsal()
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-
-  useEffect(() => {
-    // Check if user is already logged in
-    if (accounts.length > 0) {
-      // User is already logged in, redirect will be handled by App component
-      return
-    }
-  }, [accounts])
 
   const handleLogin = async () => {
     try {
@@ -48,18 +38,6 @@ const LoginPage: React.FC = () => {
     }
   }
 
-  if (inProgress === 'login') {
-    return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        height="100vh"
-      >
-        <CircularProgress size={60} />
-      </Box>
-    )
-  }
 
   return (
     <Container maxWidth="sm">
