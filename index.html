@@ -11,7 +11,7 @@
       // Load MSAL with fallback
       function loadMSAL() {
         const script = document.createElement('script');
-        script.src = 'https://alcdn.msauth.net/browser/2.28.3/js/msal-browser.min.js';
+        script.src = 'https://alcdn.msauth.net/browser/2.22.0/js/msal-browser.min.js';
         script.onload = function() {
           console.log('MSAL loaded successfully');
           console.log('MSAL available:', typeof window.msal);
@@ -23,7 +23,7 @@
           console.error('Failed to load MSAL from primary CDN, trying fallback...');
           // Try fallback CDN
           const fallbackScript = document.createElement('script');
-          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.28.3/dist/msal-browser.min.js';
+          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.22.0/dist/msal-browser.min.js';
           fallbackScript.onload = function() {
             console.log('MSAL loaded from fallback CDN');
           };
@@ -35,12 +35,7 @@
         document.head.appendChild(script);
       }
       
-      // Load MSAL when DOM is ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadMSAL);
-      } else {
-        loadMSAL();
-      }
+      // MSAL will be loaded after fetch polyfill is ready
     </script>
   </head>
   <body>
@@ -66,16 +61,31 @@
         window.require = () => {};
       }
       
-      // Fetch and Request polyfills to prevent destructuring errors
-      if (typeof fetch === 'undefined') {
-        console.log('Fetch not available, loading polyfill...');
-        const fetchScript = document.createElement('script');
-        fetchScript.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
-        fetchScript.onload = function() {
-          console.log('Fetch polyfill loaded');
+      // Load fetch polyfill first, before MSAL
+      console.log('Loading fetch polyfill...');
+      const fetchScript = document.createElement('script');
+      fetchScript.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
+      fetchScript.onload = function() {
+        console.log('Fetch polyfill loaded successfully');
+        // Now load MSAL after fetch is available
+        loadMSAL();
+      };
+      fetchScript.onerror = function() {
+        console.error('Failed to load fetch polyfill, trying alternative...');
+        // Try alternative fetch polyfill
+        const altFetchScript = document.createElement('script');
+        altFetchScript.src = 'https://unpkg.com/whatwg-fetch@3.6.2/dist/fetch.umd.js';
+        altFetchScript.onload = function() {
+          console.log('Alternative fetch polyfill loaded');
+          loadMSAL();
         };
-        document.head.appendChild(fetchScript);
-      }
+        altFetchScript.onerror = function() {
+          console.error('All fetch polyfills failed, loading MSAL anyway...');
+          loadMSAL();
+        };
+        document.head.appendChild(altFetchScript);
+      };
+      document.head.appendChild(fetchScript);
       
       // Ensure Request is available
       if (typeof Request === 'undefined' && typeof window.Request === 'undefined') {
