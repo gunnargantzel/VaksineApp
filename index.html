@@ -10,26 +10,52 @@
     <script>
       // Function to ensure fetch API is on globalThis (defined before use)
       function ensureFetchApiOnGlobalThis() {
+        const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+        
+        // Ensure globalThis exists and points to window
         if (typeof globalThis === 'undefined') {
           window.globalThis = window;
         }
-        if (typeof window.Request !== 'undefined' && typeof globalThis.Request === 'undefined') {
-          globalThis.Request = window.Request;
+        if (g !== window && typeof window.globalThis !== 'undefined') {
+          window.globalThis = window;
         }
-        if (typeof window.Response !== 'undefined' && typeof globalThis.Response === 'undefined') {
-          globalThis.Response = window.Response;
+        
+        // Copy from window to globalThis
+        if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
+          g.Request = window.Request;
         }
-        if (typeof window.Headers !== 'undefined' && typeof globalThis.Headers === 'undefined') {
-          globalThis.Headers = window.Headers;
+        if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
+          g.Response = window.Response;
         }
-        if (typeof window.fetch !== 'undefined' && typeof globalThis.fetch === 'undefined') {
-          globalThis.fetch = window.fetch;
+        if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
+          g.Headers = window.Headers;
         }
+        if (typeof window.fetch !== 'undefined' && typeof g.fetch === 'undefined') {
+          g.fetch = window.fetch;
+        }
+        
+        // Also ensure they're accessible directly
+        if (typeof g.Request !== 'undefined') {
+          if (typeof Request === 'undefined') {
+            // Make Request available in global scope
+            try {
+              Object.defineProperty(window, 'Request', {
+                value: g.Request,
+                writable: true,
+                configurable: true
+              });
+            } catch (e) {
+              window.Request = g.Request;
+            }
+          }
+        }
+        
         console.log('Fetch API ensured on globalThis:', {
-          Request: typeof globalThis.Request !== 'undefined',
-          Response: typeof globalThis.Response !== 'undefined',
-          Headers: typeof globalThis.Headers !== 'undefined',
-          fetch: typeof globalThis.fetch !== 'undefined'
+          Request: typeof g.Request !== 'undefined',
+          Response: typeof g.Response !== 'undefined',
+          Headers: typeof g.Headers !== 'undefined',
+          fetch: typeof g.fetch !== 'undefined',
+          globalThisExists: typeof globalThis !== 'undefined'
         });
       }
       
@@ -69,6 +95,17 @@
   <body>
     <div id="root"></div>
     <script>
+      // CRITICAL: Set up globalThis FIRST before anything else
+      // MSAL's fetch.js tries to destructure Request from globalThis immediately
+      if (typeof globalThis === 'undefined') {
+        window.globalThis = window;
+      }
+      
+      // Ensure globalThis always points to window
+      if (globalThis !== window) {
+        globalThis = window;
+      }
+      
       // Comprehensive polyfills for browser compatibility
       if (typeof global === 'undefined') {
         window.global = window;
@@ -89,25 +126,47 @@
         window.require = () => {};
       }
       
-      // Ensure globalThis is defined and has fetch API
-      if (typeof globalThis === 'undefined') {
-        window.globalThis = window;
-      }
-      
-      // Copy fetch API to globalThis for MSAL compatibility
-      // MSAL's fetch.js tries to destructure Request from globalThis
-      if (typeof globalThis.Request === 'undefined' && typeof window.Request !== 'undefined') {
-        globalThis.Request = window.Request;
-      }
-      if (typeof globalThis.Response === 'undefined' && typeof window.Response !== 'undefined') {
-        globalThis.Response = window.Response;
-      }
-      if (typeof globalThis.Headers === 'undefined' && typeof window.Headers !== 'undefined') {
-        globalThis.Headers = window.Headers;
-      }
-      if (typeof globalThis.fetch === 'undefined' && typeof window.fetch !== 'undefined') {
-        globalThis.fetch = window.fetch;
-      }
+      // IMMEDIATELY copy fetch API to globalThis for MSAL compatibility
+      // MSAL's fetch.js tries to destructure Request from globalThis at module load time
+      // This must happen BEFORE any scripts that might load MSAL
+      (function() {
+        // Use IIFE to ensure this runs immediately
+        const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+        
+        // Copy Request if available
+        if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
+          g.Request = window.Request;
+        }
+        
+        // Copy Response if available
+        if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
+          g.Response = window.Response;
+        }
+        
+        // Copy Headers if available
+        if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
+          g.Headers = window.Headers;
+        }
+        
+        // Copy fetch if available
+        if (typeof window.fetch !== 'undefined' && typeof g.fetch === 'undefined') {
+          g.fetch = window.fetch;
+        }
+        
+        // Also ensure they're on window if not already
+        if (typeof g.Request !== 'undefined' && typeof window.Request === 'undefined') {
+          window.Request = g.Request;
+        }
+        if (typeof g.Response !== 'undefined' && typeof window.Response === 'undefined') {
+          window.Response = g.Response;
+        }
+        if (typeof g.Headers !== 'undefined' && typeof window.Headers === 'undefined') {
+          window.Headers = g.Headers;
+        }
+        if (typeof g.fetch !== 'undefined' && typeof window.fetch === 'undefined') {
+          window.fetch = g.fetch;
+        }
+      })();
       
       // Create a custom fetch wrapper to prevent MSAL fetch.js errors
       console.log('Creating custom fetch wrapper...');
@@ -153,13 +212,42 @@
       
       // Load fetch polyfill first, before MSAL
       console.log('Loading fetch polyfill...');
+      
+      // Function to ensure fetch API is copied after polyfill loads
+      function ensureAfterPolyfillLoad() {
+        // Wait a tick to ensure polyfill has fully initialized
+        setTimeout(function() {
+          ensureFetchApiOnGlobalThis();
+          
+          // Double-check that Request is on globalThis
+          const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+          if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
+            g.Request = window.Request;
+            console.log('Copied Request to globalThis after polyfill load');
+          }
+          if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
+            g.Response = window.Response;
+            console.log('Copied Response to globalThis after polyfill load');
+          }
+          if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
+            g.Headers = window.Headers;
+            console.log('Copied Headers to globalThis after polyfill load');
+          }
+          if (typeof window.fetch !== 'undefined' && typeof g.fetch === 'undefined') {
+            g.fetch = window.fetch;
+            console.log('Copied fetch to globalThis after polyfill load');
+          }
+          
+          // Now load MSAL after fetch is available
+          loadMSAL();
+        }, 10);
+      }
+      
       const fetchScript = document.createElement('script');
       fetchScript.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
       fetchScript.onload = function() {
         console.log('Fetch polyfill loaded successfully');
-        ensureFetchApiOnGlobalThis();
-        // Now load MSAL after fetch is available
-        loadMSAL();
+        ensureAfterPolyfillLoad();
       };
       fetchScript.onerror = function() {
         console.error('Failed to load fetch polyfill, trying alternative...');
@@ -168,39 +256,48 @@
         altFetchScript.src = 'https://unpkg.com/whatwg-fetch@3.6.2/dist/fetch.umd.js';
         altFetchScript.onload = function() {
           console.log('Alternative fetch polyfill loaded');
-          ensureFetchApiOnGlobalThis();
-          loadMSAL();
+          ensureAfterPolyfillLoad();
         };
         altFetchScript.onerror = function() {
           console.error('All fetch polyfills failed, loading MSAL anyway...');
           ensureFetchApiOnGlobalThis();
-          loadMSAL();
+          // Even if polyfill fails, try to load MSAL with native fetch
+          setTimeout(function() {
+            loadMSAL();
+          }, 10);
         };
         document.head.appendChild(altFetchScript);
       };
       document.head.appendChild(fetchScript);
       
+      // Call ensureFetchApiOnGlobalThis immediately to set up everything
+      ensureFetchApiOnGlobalThis();
+      
       // Ensure Request is available on both window and globalThis
+      const g = (typeof globalThis !== 'undefined') ? globalThis : window;
       if (typeof Request === 'undefined' && typeof window.Request === 'undefined') {
         console.log('Request not available, creating polyfill...');
         const RequestPolyfill = function() {
           throw new Error('Request polyfill not fully implemented');
         };
         window.Request = RequestPolyfill;
-        globalThis.Request = RequestPolyfill;
-      } else if (typeof window.Request !== 'undefined' && typeof globalThis.Request === 'undefined') {
-        globalThis.Request = window.Request;
+        g.Request = RequestPolyfill;
+      } else if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
+        g.Request = window.Request;
       }
       
       // Ensure Response is available on globalThis
-      if (typeof window.Response !== 'undefined' && typeof globalThis.Response === 'undefined') {
-        globalThis.Response = window.Response;
+      if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
+        g.Response = window.Response;
       }
       
       // Ensure Headers is available on globalThis
-      if (typeof window.Headers !== 'undefined' && typeof globalThis.Headers === 'undefined') {
-        globalThis.Headers = window.Headers;
+      if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
+        g.Headers = window.Headers;
       }
+      
+      // Final check - ensure everything is on globalThis
+      ensureFetchApiOnGlobalThis();
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
