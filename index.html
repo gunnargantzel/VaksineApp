@@ -8,8 +8,36 @@
     <meta name="description" content="Moderne vaksinasjonsadministrasjonssystem med Entra ID og DataVerse" />
     <!-- MSAL.js CDN with fallback -->
     <script>
+      // Function to ensure fetch API is on globalThis (defined before use)
+      function ensureFetchApiOnGlobalThis() {
+        if (typeof globalThis === 'undefined') {
+          window.globalThis = window;
+        }
+        if (typeof window.Request !== 'undefined' && typeof globalThis.Request === 'undefined') {
+          globalThis.Request = window.Request;
+        }
+        if (typeof window.Response !== 'undefined' && typeof globalThis.Response === 'undefined') {
+          globalThis.Response = window.Response;
+        }
+        if (typeof window.Headers !== 'undefined' && typeof globalThis.Headers === 'undefined') {
+          globalThis.Headers = window.Headers;
+        }
+        if (typeof window.fetch !== 'undefined' && typeof globalThis.fetch === 'undefined') {
+          globalThis.fetch = window.fetch;
+        }
+        console.log('Fetch API ensured on globalThis:', {
+          Request: typeof globalThis.Request !== 'undefined',
+          Response: typeof globalThis.Response !== 'undefined',
+          Headers: typeof globalThis.Headers !== 'undefined',
+          fetch: typeof globalThis.fetch !== 'undefined'
+        });
+      }
+      
       // Load MSAL with fallback
       function loadMSAL() {
+        // Ensure fetch API is available on globalThis before loading MSAL
+        ensureFetchApiOnGlobalThis();
+        
         const script = document.createElement('script');
         script.src = 'https://alcdn.msauth.net/browser/2.20.0/js/msal-browser.min.js';
         script.onload = function() {
@@ -61,6 +89,26 @@
         window.require = () => {};
       }
       
+      // Ensure globalThis is defined and has fetch API
+      if (typeof globalThis === 'undefined') {
+        window.globalThis = window;
+      }
+      
+      // Copy fetch API to globalThis for MSAL compatibility
+      // MSAL's fetch.js tries to destructure Request from globalThis
+      if (typeof globalThis.Request === 'undefined' && typeof window.Request !== 'undefined') {
+        globalThis.Request = window.Request;
+      }
+      if (typeof globalThis.Response === 'undefined' && typeof window.Response !== 'undefined') {
+        globalThis.Response = window.Response;
+      }
+      if (typeof globalThis.Headers === 'undefined' && typeof window.Headers !== 'undefined') {
+        globalThis.Headers = window.Headers;
+      }
+      if (typeof globalThis.fetch === 'undefined' && typeof window.fetch !== 'undefined') {
+        globalThis.fetch = window.fetch;
+      }
+      
       // Create a custom fetch wrapper to prevent MSAL fetch.js errors
       console.log('Creating custom fetch wrapper...');
       
@@ -109,6 +157,7 @@
       fetchScript.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
       fetchScript.onload = function() {
         console.log('Fetch polyfill loaded successfully');
+        ensureFetchApiOnGlobalThis();
         // Now load MSAL after fetch is available
         loadMSAL();
       };
@@ -119,22 +168,38 @@
         altFetchScript.src = 'https://unpkg.com/whatwg-fetch@3.6.2/dist/fetch.umd.js';
         altFetchScript.onload = function() {
           console.log('Alternative fetch polyfill loaded');
+          ensureFetchApiOnGlobalThis();
           loadMSAL();
         };
         altFetchScript.onerror = function() {
           console.error('All fetch polyfills failed, loading MSAL anyway...');
+          ensureFetchApiOnGlobalThis();
           loadMSAL();
         };
         document.head.appendChild(altFetchScript);
       };
       document.head.appendChild(fetchScript);
       
-      // Ensure Request is available
+      // Ensure Request is available on both window and globalThis
       if (typeof Request === 'undefined' && typeof window.Request === 'undefined') {
         console.log('Request not available, creating polyfill...');
-        window.Request = function() {
+        const RequestPolyfill = function() {
           throw new Error('Request polyfill not fully implemented');
         };
+        window.Request = RequestPolyfill;
+        globalThis.Request = RequestPolyfill;
+      } else if (typeof window.Request !== 'undefined' && typeof globalThis.Request === 'undefined') {
+        globalThis.Request = window.Request;
+      }
+      
+      // Ensure Response is available on globalThis
+      if (typeof window.Response !== 'undefined' && typeof globalThis.Response === 'undefined') {
+        globalThis.Response = window.Response;
+      }
+      
+      // Ensure Headers is available on globalThis
+      if (typeof window.Headers !== 'undefined' && typeof globalThis.Headers === 'undefined') {
+        globalThis.Headers = window.Headers;
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>
