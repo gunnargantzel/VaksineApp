@@ -20,18 +20,46 @@
           window.globalThis = window;
         }
         
-        // Copy from window to globalThis
-        if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
-          g.Request = window.Request;
+        // Helper function to define property on globalThis
+        function defineOnGlobalThis(name, value) {
+          if (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'undefined') {
+            try {
+              Object.defineProperty(globalThis, name, {
+                value: value,
+                writable: true,
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e) {
+              globalThis[name] = value;
+            }
+          }
         }
-        if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
-          g.Response = window.Response;
+        
+        // Copy from window to globalThis using defineProperty for robustness
+        if (typeof window.Request !== 'undefined') {
+          if (typeof g.Request === 'undefined') {
+            g.Request = window.Request;
+          }
+          defineOnGlobalThis('Request', window.Request);
         }
-        if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
-          g.Headers = window.Headers;
+        if (typeof window.Response !== 'undefined') {
+          if (typeof g.Response === 'undefined') {
+            g.Response = window.Response;
+          }
+          defineOnGlobalThis('Response', window.Response);
         }
-        if (typeof window.fetch !== 'undefined' && typeof g.fetch === 'undefined') {
-          g.fetch = window.fetch;
+        if (typeof window.Headers !== 'undefined') {
+          if (typeof g.Headers === 'undefined') {
+            g.Headers = window.Headers;
+          }
+          defineOnGlobalThis('Headers', window.Headers);
+        }
+        if (typeof window.fetch !== 'undefined') {
+          if (typeof g.fetch === 'undefined') {
+            g.fetch = window.fetch;
+          }
+          defineOnGlobalThis('fetch', window.fetch);
         }
         
         // Also ensure they're accessible directly
@@ -55,38 +83,67 @@
           Response: typeof g.Response !== 'undefined',
           Headers: typeof g.Headers !== 'undefined',
           fetch: typeof g.fetch !== 'undefined',
-          globalThisExists: typeof globalThis !== 'undefined'
+          globalThisExists: typeof globalThis !== 'undefined',
+          globalThisRequest: typeof globalThis !== 'undefined' ? typeof globalThis.Request !== 'undefined' : false
         });
       }
       
       // Load MSAL with fallback
       function loadMSAL() {
-        // Ensure fetch API is available on globalThis before loading MSAL
+        // CRITICAL: Ensure fetch API is available on globalThis before loading MSAL
         ensureFetchApiOnGlobalThis();
         
-        const script = document.createElement('script');
-        script.src = 'https://alcdn.msauth.net/browser/2.20.0/js/msal-browser.min.js';
-        script.onload = function() {
-          console.log('MSAL loaded successfully');
-          console.log('MSAL available:', typeof window.msal);
-          if (window.msal) {
-            console.log('MSAL PublicClientApplication available:', !!window.msal.PublicClientApplication);
+        // Final safety check - ensure Request is definitely on globalThis and accessible
+        const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+        
+        // Force Request onto globalThis if it exists on window
+        if (typeof window.Request !== 'undefined') {
+          g.Request = window.Request;
+          // Also set it directly on globalThis object
+          if (typeof globalThis !== 'undefined') {
+            globalThis.Request = window.Request;
+            globalThis.Response = window.Response || globalThis.Response;
+            globalThis.Headers = window.Headers || globalThis.Headers;
+            globalThis.fetch = window.fetch || globalThis.fetch;
           }
-        };
-        script.onerror = function() {
-          console.error('Failed to load MSAL from primary CDN, trying fallback...');
-          // Try fallback CDN
-          const fallbackScript = document.createElement('script');
-          fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.20.0/dist/msal-browser.min.js';
-          fallbackScript.onload = function() {
-            console.log('MSAL loaded from fallback CDN');
+        }
+        
+        // Wait a moment to ensure everything is set up
+        setTimeout(function() {
+          // Double-check before loading
+          ensureFetchApiOnGlobalThis();
+          const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+          if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
+            g.Request = window.Request;
+            if (typeof globalThis !== 'undefined') {
+              globalThis.Request = window.Request;
+            }
+          }
+          
+          const script = document.createElement('script');
+          script.src = 'https://alcdn.msauth.net/browser/2.20.0/js/msal-browser.min.js';
+          script.onload = function() {
+            console.log('MSAL loaded successfully');
+            console.log('MSAL available:', typeof window.msal);
+            if (window.msal) {
+              console.log('MSAL PublicClientApplication available:', !!window.msal.PublicClientApplication);
+            }
           };
-          fallbackScript.onerror = function() {
-            console.error('Failed to load MSAL from both CDNs');
+          script.onerror = function() {
+            console.error('Failed to load MSAL from primary CDN, trying fallback...');
+            // Try fallback CDN
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://unpkg.com/@azure/msal-browser@2.20.0/dist/msal-browser.min.js';
+            fallbackScript.onload = function() {
+              console.log('MSAL loaded from fallback CDN');
+            };
+            fallbackScript.onerror = function() {
+              console.error('Failed to load MSAL from both CDNs');
+            };
+            document.head.appendChild(fallbackScript);
           };
-          document.head.appendChild(fallbackScript);
-        };
-        document.head.appendChild(script);
+          document.head.appendChild(script);
+        }, 50); // Small delay to ensure everything is set up
       }
       
       // MSAL will be loaded after fetch polyfill is ready
@@ -122,8 +179,21 @@
       if (typeof Buffer === 'undefined') {
         window.Buffer = { isBuffer: () => false };
       }
+      // Define require to return fetch API objects if MSAL tries to use it
       if (typeof require === 'undefined') {
-        window.require = () => {};
+        window.require = function(moduleName) {
+          // If MSAL tries to require something related to fetch, return our polyfill
+          if (moduleName && (moduleName.includes('fetch') || moduleName.includes('Request'))) {
+            const g = (typeof globalThis !== 'undefined') ? globalThis : window;
+            return {
+              Request: g.Request || window.Request,
+              Response: g.Response || window.Response,
+              Headers: g.Headers || window.Headers,
+              fetch: g.fetch || window.fetch
+            };
+          }
+          return {};
+        };
       }
       
       // IMMEDIATELY copy fetch API to globalThis for MSAL compatibility
@@ -133,24 +203,52 @@
         // Use IIFE to ensure this runs immediately
         const g = (typeof globalThis !== 'undefined') ? globalThis : window;
         
-        // Copy Request if available
-        if (typeof window.Request !== 'undefined' && typeof g.Request === 'undefined') {
-          g.Request = window.Request;
+        // Helper function to define property on globalThis
+        function defineOnGlobalThis(name, value) {
+          if (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'undefined') {
+            try {
+              Object.defineProperty(globalThis, name, {
+                value: value,
+                writable: true,
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e) {
+              globalThis[name] = value;
+            }
+          }
+        }
+        
+        // Copy Request if available - use defineProperty for robustness
+        if (typeof window.Request !== 'undefined') {
+          if (typeof g.Request === 'undefined') {
+            g.Request = window.Request;
+          }
+          defineOnGlobalThis('Request', window.Request);
         }
         
         // Copy Response if available
-        if (typeof window.Response !== 'undefined' && typeof g.Response === 'undefined') {
-          g.Response = window.Response;
+        if (typeof window.Response !== 'undefined') {
+          if (typeof g.Response === 'undefined') {
+            g.Response = window.Response;
+          }
+          defineOnGlobalThis('Response', window.Response);
         }
         
         // Copy Headers if available
-        if (typeof window.Headers !== 'undefined' && typeof g.Headers === 'undefined') {
-          g.Headers = window.Headers;
+        if (typeof window.Headers !== 'undefined') {
+          if (typeof g.Headers === 'undefined') {
+            g.Headers = window.Headers;
+          }
+          defineOnGlobalThis('Headers', window.Headers);
         }
         
         // Copy fetch if available
-        if (typeof window.fetch !== 'undefined' && typeof g.fetch === 'undefined') {
-          g.fetch = window.fetch;
+        if (typeof window.fetch !== 'undefined') {
+          if (typeof g.fetch === 'undefined') {
+            g.fetch = window.fetch;
+          }
+          defineOnGlobalThis('fetch', window.fetch);
         }
         
         // Also ensure they're on window if not already
