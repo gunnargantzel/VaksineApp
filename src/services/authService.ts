@@ -19,19 +19,21 @@ export const login = async () => {
     }
 
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
     
-    if (isIOS) {
-      console.log('iOS device detected, using loginRedirect');
+    // Use redirect for iOS, development, or if popup is not supported
+    if (isIOS || isDevelopment) {
+      console.log(isIOS ? 'iOS device detected, using loginRedirect' : 'Development mode, using loginRedirect');
       return msalInstance.loginRedirect(loginRequest);
     }
     
-    // Desktop/Android:
+    // Production desktop/Android: try popup first, fallback to redirect
     try {
       const resp = await msalInstance.loginPopup(loginRequest);
       msalInstance.setActiveAccount(resp.account);
       return resp;
-    } catch {
-      console.log('Popup failed, trying redirect as fallback');
+    } catch (error) {
+      console.log('Popup failed, trying redirect as fallback:', error);
       return msalInstance.loginRedirect(loginRequest);
     }
   } catch (error) {
@@ -49,14 +51,21 @@ export const logout = async () => {
     }
 
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
     const logoutRequest = {
       postLogoutRedirectUri: CONFIG.auth.postLogoutRedirectUri
     };
 
-    if (isIOS) {
+    // Use redirect for iOS or development
+    if (isIOS || isDevelopment) {
       await msalInstance.logoutRedirect(logoutRequest);
     } else {
-      await msalInstance.logoutPopup(logoutRequest);
+      try {
+        await msalInstance.logoutPopup(logoutRequest);
+      } catch (error) {
+        console.log('Logout popup failed, using redirect:', error);
+        await msalInstance.logoutRedirect(logoutRequest);
+      }
     }
   } catch (error) {
     console.error('Logout failed:', error)
